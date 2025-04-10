@@ -1,7 +1,7 @@
 import ApiService from "./ApiService";
 
-const addSubject = async () => {
-  return ApiService.post("/create-subject.php");
+const addSubject = async (subjectData) => {
+  return ApiService.post("/create-subject.php", subjectData);
 };
 
 export default {

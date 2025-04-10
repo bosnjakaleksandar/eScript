@@ -3,6 +3,7 @@ import DashboardData from "../services/api/DashboardData";
 import Subjects from "../services/api/Subjects";
 import addSubject from "../services/api/AddSubject";
 import createNote from "../services/api/CreateNote";
+import Logout from "../services/api/Logout";
 
 export default {
   data() {
@@ -22,6 +23,7 @@ export default {
       errorMessage: "",
       successMessage: "",
       isLoading: false,
+      isLoggingOut: false,
     };
   },
   methods: {
@@ -81,27 +83,37 @@ export default {
         this.errorMessage = "";
         this.successMessage = "";
 
-        const response = await addSubject.addSubject();
+        const response = await addSubject.addSubject({
+          name: this.newSubjectName,
+          year: this.selectedYear,
+        });
+
         const data = response;
 
-        if (data.success) {
-          this.subjects.push(data.subject);
+        if (data && data.success) {
+          if (data.subject) {
+            this.subjects.push(data.subject);
+          } else {
+            console.warn("Subject data missing in the successful response.");
+          }
+
           this.subjectsCount++;
 
           this.newSubjectName = "";
           this.selectedYear = null;
-
           this.successMessage = "Subject added successfully!";
         } else {
-          this.errorMessage = data.error || "Failed to add subject";
-
-          if (data.debug) {
+          this.errorMessage =
+            data && data.error
+              ? data.error
+              : "Failed to add subject. Unknown error format or success=false.";
+          if (data && data.debug) {
             console.log("Debug info:", data.debug);
           }
         }
       } catch (err) {
-        console.error("Submit error:", err);
-        this.errorMessage = "Network error while adding subject";
+        console.error("Submit error in addSubject:", err);
+        this.errorMessage = `Network or processing error while adding subject: ${err.message}`;
       } finally {
         this.isLoading = false;
       }
@@ -109,7 +121,8 @@ export default {
 
     async submitScript() {
       if (!this.scriptText || !this.selectedCategory) {
-        this.errorMessage = "Please fill in all required fields";
+        this.errorMessage =
+          "Please fill in all required fields (script text and subject category)";
         return;
       }
 
@@ -118,22 +131,55 @@ export default {
         this.errorMessage = "";
         this.successMessage = "";
 
-        const response = await createNote.createNote();
-        const data = await response.json();
+        const response = await createNote.createNote({
+          content: this.scriptText,
+          subject_id: this.selectedCategory,
+        });
 
-        if (data.success) {
+        const data = response;
+
+        if (data && data.success) {
           this.scriptText = "";
           this.selectedCategory = null;
-
           this.successMessage = "Script submitted successfully!";
         } else {
-          this.errorMessage = data.error || "Failed to submit script";
+          this.errorMessage =
+            data && data.error
+              ? data.error
+              : "Failed to submit script. Unknown error format or success=false.";
+          if (data) {
+            console.log("Error response data:", data);
+          }
         }
       } catch (err) {
-        console.error("Submit error:", err);
-        this.errorMessage = "Network error while submitting script";
+        console.error("Submit error in submitScript:", err);
+        this.errorMessage = `Network or processing error while submitting script: ${err.message}`;
       } finally {
         this.isLoading = false;
+      }
+    },
+
+    async logoutUser() {
+      this.isLoggingOut = true;
+      this.errorMessage = "";
+
+      try {
+        const response = await Logout.logout();
+
+        if (response && response.success) {
+          localStorage.removeItem("user");
+          this.$router.push("/");
+        } else {
+          this.errorMessage =
+            response && response.error
+              ? response.error
+              : "Logout failed on the server.";
+        }
+      } catch (err) {
+        console.error("Logout error:", err);
+        this.errorMessage = "Network error during logout. Please try again.";
+      } finally {
+        this.isLoggingOut = false;
       }
     },
 
@@ -142,7 +188,7 @@ export default {
       if (userData) {
         const user = JSON.parse(userData);
         this.userRole = user.role || "";
-        this.userName = user.name || "";
+        this.userName = user.username || user.name || "";
       }
     },
   },
@@ -182,7 +228,19 @@ export default {
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link class="btn btn-danger" to="/">Log Out</router-link>
+              <button
+                class="btn btn-danger"
+                @click="logoutUser"
+                :disabled="isLoggingOut"
+              >
+                <span
+                  v-if="isLoggingOut"
+                  class="spinner-border spinner-border-sm"
+                  role="status"
+                  aria-hidden="true"
+                ></span>
+                {{ isLoggingOut ? "Logging out..." : "Log Out" }}
+              </button>
             </li>
           </ul>
         </div>

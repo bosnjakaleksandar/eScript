@@ -1,7 +1,7 @@
 import ApiService from "./ApiService";
 
-const createNote = async () => {
-  return ApiService.get("/create-note.php");
+const createNote = async (noteData) => {
+  return ApiService.post("/create-note.php", noteData);
 };
 
 export default {
