@@ -1,8 +1,14 @@
 <script>
+import DashboardData from "../services/api/DashboardData";
+import Subjects from "../services/api/Subjects";
+import addSubject from "../services/api/AddSubject";
+import createNote from "../services/api/CreateNote";
+
 export default {
   data() {
     return {
       userRole: "",
+      userName: "",
       totalUsers: 0,
       subjectsCount: 0,
       subjects: [],
@@ -22,13 +28,9 @@ export default {
     async fetchDashboardData() {
       try {
         this.isLoading = true;
-        const response = await fetch(
-          "http://localhost:8002/get-dashboard-data.php",
-          {
-            credentials: "include",
-          }
-        );
-        const data = await response.json();
+        const response = await DashboardData.getDashboardData();
+        const data = response.data;
+
         if (data.success) {
           this.totalUsers = data.totalUsers;
           this.subjectsCount = data.totalSubjects;
@@ -47,9 +49,7 @@ export default {
     async fetchSubjects() {
       try {
         this.isLoading = true;
-        const response = await fetch("http://localhost:8002/get-subjects.php", {
-          credentials: "include",
-        });
+        const response = await Subjects.getSubjects();
         const data = await response.json();
 
         if (data.success) {
@@ -81,21 +81,7 @@ export default {
         this.errorMessage = "";
         this.successMessage = "";
 
-        const response = await fetch(
-          "http://localhost:8002/create-subject.php",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              name: this.newSubjectName,
-              year: this.selectedYear,
-            }),
-          }
-        );
-
+        const response = await addSubject.addSubject();
         const data = await response.json();
 
         if (data.success) {
@@ -132,18 +118,7 @@ export default {
         this.errorMessage = "";
         this.successMessage = "";
 
-        const response = await fetch("http://localhost:8002/create-note.php", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            content: this.scriptText,
-            subject_id: this.selectedCategory,
-          }),
-        });
-
+        const response = await createNote.createNote();
         const data = await response.json();
 
         if (data.success) {
@@ -167,6 +142,7 @@ export default {
       if (userData) {
         const user = JSON.parse(userData);
         this.userRole = user.role || "";
+        this.userName = user.name || "";
       }
     },
   },
@@ -188,15 +164,21 @@ export default {
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <router-link class="nav-link d-flex" to="/myscripts">
+              <router-link class="nav-link d-flex" to="#">
                 <i class="fa-solid fa-scroll fs-4"></i>
                 <span class="nav-text ms-2">My Scripts</span>
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link class="nav-link d-flex" to="/bookmarks">
+              <router-link class="nav-link d-flex" to="#">
                 <i class="fa-solid fa-bookmark fs-4"></i>
                 <span class="nav-text ms-2">Bookmarks</span>
+              </router-link>
+            </li>
+            <li class="nav-item">
+              <router-link class="nav-link d-flex" to="#">
+                <i class="fa-solid fa-user-tie fs-4"></i>
+                <span class="nav-text ms-2">{{ userName }}</span>
               </router-link>
             </li>
             <li class="nav-item">

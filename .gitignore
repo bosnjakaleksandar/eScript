@@ -25,5 +25,5 @@ dist-ssr
 
 # Database
 
-escript_db.sql
+notes_app.sql
 notes_app_backup.sql

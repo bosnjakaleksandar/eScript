@@ -1,4 +1,6 @@
 <script>
+import Subjects from "../services/api/Subjects";
+
 export default {
   name: "SidebarView",
   data() {
@@ -40,14 +42,7 @@ export default {
 
     async fetchSubjects() {
       try {
-        const response = await fetch("http://localhost:8002/get-subjects.php", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
+        const response = await Subjects.getSubjects();
         const data = await response.json();
 
         if (data.success) {

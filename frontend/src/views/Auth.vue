@@ -1,4 +1,7 @@
 <script>
+import login from "../services/api/Auth";
+import register from "../services/api/Auth";
+
 export default {
   data() {
     return {
@@ -17,6 +20,7 @@ export default {
         confirmPassword: "",
         termsAccepted: false,
       },
+      error: "",
     };
   },
   methods: {
@@ -33,63 +37,50 @@ export default {
     },
 
     async handleSubmit() {
-      if (this.isLoginForm) {
-        try {
-          const response = await fetch("http://localhost:8002/login.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(this.loginForm),
-          });
+      this.error = "";
 
-          const data = await response.json();
+      try {
+        let response;
 
-          if (data.success) {
-            console.log("Login success:", data);
-
-            localStorage.setItem("user", JSON.stringify(data.user));
-
-            if (data.role === "admin") {
-              this.$router.push("/admin-dashboard");
-            } else {
-              this.$router.push("/dashboard");
-            }
-          } else {
-            alert(data.error || "Login failed.");
+        if (this.isLoginForm) {
+          response = await login.login(this.loginForm);
+        } else {
+          if (
+            this.registerForm.password !== this.registerForm.confirmPassword
+          ) {
+            this.error = "Passwords do not match.";
+            return;
           }
-        } catch (error) {
-          console.error("Login error:", error);
-          alert("Error logging in.");
-        }
-      } else {
-        if (this.registerForm.password !== this.registerForm.confirmPassword) {
-          alert("Passwords do not match.");
-          return;
-        }
 
-        if (!this.registerForm.termsAccepted) {
-          alert("Please accept the terms and conditions.");
-          return;
+          if (!this.registerForm.termsAccepted) {
+            this.error = "Please accept the terms and conditions.";
+            return;
+          }
+
+          response = await register.register(this.registerForm);
         }
 
-        try {
-          const response = await fetch("http://localhost:8002/register.php", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(this.registerForm),
-          });
+        if (response.success) {
+          console.log(
+            this.isLoginForm ? "Login success:" : "Registration success:",
+            response
+          );
 
-          const data = await response.json();
+          localStorage.setItem("user", JSON.stringify(response.user));
 
-          if (data.success) {
-            console.log("Registration success:", data);
+          if (response.role === "admin") {
+            this.$router.push("/admin-dashboard");
+          } else {
             this.$router.push("/dashboard");
-          } else {
-            alert(data.error || "Registration failed.");
           }
-        } catch (error) {
-          console.error("Registration error:", error);
-          alert("Error registering.");
+        } else {
+          this.error =
+            response.error ||
+            (this.isLoginForm ? "Login failed." : "Registration failed.");
         }
+      } catch (error) {
+        console.error("Error during login/register:", error);
+        this.error = error.message || "An unexpected error occurred.";
       }
     },
 
@@ -142,6 +133,20 @@ export default {
             v-if="isLoginForm"
           >
             <p class="text-center fw-bold mx-3 mb-0">Or</p>
+          </div>
+
+          <div v-if="error">
+            <div
+              class="alert alert-danger alert-dismissible fade show"
+              role="alert"
+            >
+              {{ error }}
+              <button
+                type="button"
+                class="btn-close"
+                @click="error = ''"
+              ></button>
+            </div>
           </div>
 
           <form @submit.prevent="handleSubmit">

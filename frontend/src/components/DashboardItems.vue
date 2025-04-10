@@ -1,86 +1,85 @@
 <script>
+import Subjects from "../services/api/Subjects";
+import createNote from "../services/api/CreateNote";
+
 export default {
   data() {
     return {
-      scriptText: "",
+      userRole: "",
+      userName: "",
+      totalUsers: 0,
+      subjectsCount: 0,
+      subjects: [],
       selectedCategory: null,
-      subjects: [], // Array to hold the subjects (categories)
-      totalScripts: 0, // Total number of scripts in the database
-      myScriptsCount: 0, // Number of scripts the user has created
-      bookmarksCount: 0, // Number of bookmarks (if implemented)
+
+      newSubjectName: "",
+      selectedYear: null,
+
+      scriptText: "",
+
+      errorMessage: "",
+      successMessage: "",
+      isLoading: false,
     };
   },
   methods: {
-    async handleSubmit() {
-      if (!this.scriptText || !this.selectedCategory) {
-        alert("Please write a script and select a subject.");
-        return;
-      }
-
-      try {
-        // Get the current user's ID (replace with actual method for getting user ID)
-        const userId = 1; // You should replace this with actual user session data
-
-        const response = await fetch("http://localhost:8002/create-note.php", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            user_id: userId,
-            subject_id: this.selectedCategory,
-            content: this.scriptText,
-          }),
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          alert("Script submitted successfully.");
-          this.scriptText = ""; // Reset text area after submission
-          this.selectedCategory = null; // Reset selected category
-          this.fetchData(); // Re-fetch the counts
-        } else {
-          alert(data.error || "Failed to submit script.");
-        }
-      } catch (error) {
-        console.error("Error submitting script:", error);
-        alert("An error occurred while submitting the script.");
-      }
-    },
-    async fetchData() {
-      try {
-        // Fetch the total number of scripts and the user's created scripts
-        const response = await fetch(
-          "http://localhost:8002/get-dashboard-data.php"
-        );
-        const data = await response.json();
-
-        if (data.success) {
-          this.totalScripts = data.totalScripts;
-          this.myScriptsCount = data.myScriptsCount;
-          this.bookmarksCount = data.bookmarksCount; // If bookmarks are implemented
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-      }
-    },
     async fetchSubjects() {
       try {
-        const response = await fetch("http://localhost:8002/get-subjects.php");
+        this.isLoading = true;
+        const response = await Subjects.getSubjects();
         const data = await response.json();
 
         if (data.success) {
           this.subjects = data.subjects;
+        } else {
+          console.error("Error fetching subjects:", data.error);
+          this.errorMessage = "Failed to load subjects";
+
+          if (data.debug) {
+            console.log("Debug info:", data.debug);
+          }
         }
-      } catch (error) {
-        console.error("Error fetching subjects:", error);
+      } catch (err) {
+        console.error("Fetch error:", err);
+        this.errorMessage = "Network error while loading subjects";
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async submitScript() {
+      if (!this.scriptText || !this.selectedCategory) {
+        this.errorMessage = "Please fill in all required fields";
+        return;
+      }
+
+      try {
+        this.isLoading = true;
+        this.errorMessage = "";
+        this.successMessage = "";
+
+        const response = await createNote.createNote();
+        const data = await response.json();
+
+        if (data.success) {
+          this.scriptText = "";
+          this.selectedCategory = null;
+
+          this.successMessage = "Script submitted successfully!";
+        } else {
+          this.errorMessage = data.error || "Failed to submit script";
+        }
+      } catch (err) {
+        console.error("Submit error:", err);
+        this.errorMessage = "Network error while submitting script";
+      } finally {
+        this.isLoading = false;
       }
     },
   },
+
   mounted() {
     this.fetchSubjects();
-    this.fetchData();
   },
 };
 </script>
@@ -103,21 +102,13 @@ export default {
         <div class="collapse navbar-collapse" id="navbarNav">
           <ul class="navbar-nav ms-auto">
             <li class="nav-item">
-              <router-link
-                class="nav-link"
-                to="/myscripts"
-                style="display: flex"
-              >
+              <router-link class="nav-link" to="#" style="display: flex">
                 <i class="fa-solid fa-scroll fs-4"></i>
                 <span class="nav-text ms-2">My Scripts</span>
               </router-link>
             </li>
             <li class="nav-item">
-              <router-link
-                class="nav-link"
-                to="/bookmarks"
-                style="display: flex"
-              >
+              <router-link class="nav-link" to="#" style="display: flex">
                 <i class="fa-solid fa-bookmark fs-4"></i>
                 <span class="nav-text ms-2">Bookmarks</span>
               </router-link>

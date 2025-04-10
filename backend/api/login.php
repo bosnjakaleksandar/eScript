@@ -1,4 +1,5 @@
 <?php
+session_start();
 
 include 'header.php';
 
@@ -26,13 +27,11 @@ try {
     $user = $result->fetch_assoc();
 
     if ($user && password_verify($data->password, $user['password'])) {
-        session_start();
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
-        $_SESSION['email'] = $user['email'];
-        $_SESSION['role'] = $user['role'];
-
         unset($user['password']);
+        $_SESSION['user'] = $user;
+        error_log("login.php: Authentication successful. Session data: " . print_r($_SESSION, true));
+
+
         $response = [
             "success" => true,
             "user" => $user,
@@ -40,7 +39,8 @@ try {
         ];
         echo json_encode($response);
     } else {
-        echo json_encode(["success" => false, "error" => "Invalid username or password"]);
+        $response = ["success" => false, "error" => "Invalid username or password"];
+        echo json_encode($response);
     }
 
     $stmt->close();
