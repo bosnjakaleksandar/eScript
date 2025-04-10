@@ -43,7 +43,7 @@ export default {
     async fetchSubjects() {
       try {
         const response = await Subjects.getSubjects();
-        const data = await response.json();
+        const data = response;
 
         if (data.success) {
           this.groupSubjectsByYear(data.subjects);

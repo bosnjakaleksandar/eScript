@@ -29,7 +29,7 @@ export default {
       try {
         this.isLoading = true;
         const response = await DashboardData.getDashboardData();
-        const data = response.data;
+        const data = response;
 
         if (data.success) {
           this.totalUsers = data.totalUsers;
@@ -50,7 +50,7 @@ export default {
       try {
         this.isLoading = true;
         const response = await Subjects.getSubjects();
-        const data = await response.json();
+        const data = response;
 
         if (data.success) {
           this.subjects = data.subjects;
@@ -82,7 +82,7 @@ export default {
         this.successMessage = "";
 
         const response = await addSubject.addSubject();
-        const data = await response.json();
+        const data = response;
 
         if (data.success) {
           this.subjects.push(data.subject);
