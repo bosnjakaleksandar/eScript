@@ -1,421 +1,311 @@
 <script>
-import Subjects from "../services/api/Subjects";
+import Logout from "../services/api/Logout";
 
 export default {
-  name: "SidebarView",
   data() {
     return {
-      isSidebarNarrow: false,
-      isMobileExpanded: false,
-      openSubmenus: [],
-      subjects: [],
-      subjectsByYear: [[], [], [], []],
-      errorLoading: false,
+      errorMessage: "",
+      isLoggingOut: false,
     };
   },
-  computed: {
-    toggleIcon() {
-      return this.isSidebarNarrow ? "fa-chevron-right" : "fa-chevron-left";
-    },
-  },
   methods: {
-    toggleSidebar() {
-      this.isSidebarNarrow = !this.isSidebarNarrow;
-      if (window.innerWidth <= 768) {
-        this.isMobileExpanded = !this.isSidebarNarrow;
-        document.body.classList.toggle("sidebar-open", this.isMobileExpanded);
-      }
-      localStorage.setItem(
-        "sidebarState",
-        this.isSidebarNarrow ? "narrow" : "expanded"
-      );
-    },
-    toggleSubmenu(event, year) {
-      const submenuId = `year-${year}`;
+    async logoutUser() {
+      this.isLoggingOut = true;
+      this.errorMessage = "";
 
-      if (this.openSubmenus.includes(submenuId)) {
-        this.openSubmenus = this.openSubmenus.filter((id) => id !== submenuId);
-      } else {
-        this.openSubmenus = [submenuId];
-      }
-    },
-
-    async fetchSubjects() {
       try {
-        const response = await Subjects.getSubjects();
-        const data = response;
+        const response = await Logout.logout();
 
-        if (data.success) {
-          this.groupSubjectsByYear(data.subjects);
-        } else {
-          console.error("Error fetching subjects:", data.error);
-          this.errorLoading = true;
-
-          if (data.debug) {
-            console.log("Debug info:", data.debug);
+        if (response && response.success) {
+          localStorage.removeItem("user");
+          if (this.$router) {
+            const loginRouteExists = this.$router.hasRoute("Login");
+            if (loginRouteExists) {
+              this.$router.push({ name: "Login" });
+            } else {
+              console.warn("Route 'Login' not found. Redirecting to root '/'.");
+              this.$router.push("/");
+            }
+          } else {
+            console.error("Vue Router instance ($router) is not available.");
+            window.location.href = "/";
           }
+        } else {
+          this.errorMessage =
+            response && response.error
+              ? response.error
+              : "Logout failed on the server.";
+          console.error(
+            "Logout API Error:",
+            response ? response.error : "Unknown error"
+          );
         }
-      } catch (error) {
-        console.error("Error:", error);
-        this.errorLoading = true;
+      } catch (err) {
+        console.error("Logout system error:", err);
+        this.errorMessage =
+          "Network or system error during logout. Please try again.";
+        if (err.response) {
+          console.error("Server responded with status:", err.response.status);
+          console.error("Response data:", err.response.data);
+        } else if (err.request) {
+          console.error("No response received:", err.request);
+        } else {
+          console.error("Error setting up request:", err.message);
+        }
+      } finally {
+        this.isLoggingOut = false;
       }
     },
-
-    groupSubjectsByYear(subjects) {
-      this.subjectsByYear = [[], [], [], []];
-
-      subjects.forEach((subject) => {
-        if (subject.year >= 1 && subject.year <= 4) {
-          this.subjectsByYear[subject.year - 1].push(subject);
-        }
-      });
-    },
-    restoreSidebarState() {
-      const savedState = localStorage.getItem("sidebarState");
-      if (savedState === "narrow") {
-        this.isSidebarNarrow = true;
-      }
-    },
-  },
-  mounted() {
-    this.restoreSidebarState();
-    this.fetchSubjects();
   },
 };
 </script>
 
 <template>
-  <div
-    id="sidebar-wrapper"
-    :class="{
-      'sidebar-narrow': isSidebarNarrow,
-      'mobile-expanded': isMobileExpanded,
-    }"
-  >
+  <div class="alert-container" v-if="errorMessage">
     <div
-      class="sidebar position-relative"
-      id="sidebar"
-      :class="{ 'sidebar-narrow': isSidebarNarrow }"
+      class="alert alert-danger alert-dismissible fade show m-3"
+      role="alert"
     >
-      <div class="toggle-btn" @click="toggleSidebar">
-        <i class="fas" :class="toggleIcon"></i>
-      </div>
-      <div class="sidebar-content">
-        <div class="sidebar-logo">
-          <router-link to="/dashboard">
-            <span>eScript</span>
-          </router-link>
-        </div>
-        <ul class="p-0">
-          <li class="active mt-3">
-            <router-link to="/dashboard">
-              <i class="fa-solid fa-gauge-high fs-4"></i>
-              <span class="nav-text">Dashboard</span>
-            </router-link>
-          </li>
-
-          <!-- Error message when subjects fail to load -->
-          <li v-if="errorLoading" class="text-warning">
-            <a href="#" @click.prevent="fetchSubjects()">
-              <i class="fa-solid fa-triangle-exclamation fs-4"></i>
-              <span class="nav-text">Failed to load. Retry?</span>
-            </a>
-          </li>
-
-          <!-- Dynamic Subjects Menu -->
-          <li
-            v-for="(yearSubjects, yearIndex) in subjectsByYear"
-            :key="`year-${yearIndex + 1}`"
-            class="has-submenu"
-            v-show="yearSubjects.length > 0"
-          >
-            <a
-              href="#"
-              class="submenu-toggle"
-              @click.prevent="toggleSubmenu($event, yearIndex + 1)"
-            >
-              <i class="fa-solid fa-calendar-year fs-4"></i>
-              <span class="nav-text">Godina {{ yearIndex + 1 }}</span>
-              <i
-                class="fa-solid fa-chevron-down submenu-icon"
-                :class="{
-                  rotate: openSubmenus.includes(`year-${yearIndex + 1}`),
-                }"
-              ></i>
-            </a>
-            <ul
-              class="submenu"
-              :class="{ open: openSubmenus.includes(`year-${yearIndex + 1}`) }"
-            >
-              <li
-                v-for="subject in yearSubjects"
-                :key="`subject-${subject.id}`"
-              >
-                <router-link :to="`/subject/${subject.id}`">
-                  <i class="fa-solid fa-book fs-4"></i>
-                  <span class="nav-text">{{ subject.name }}</span>
-                </router-link>
-              </li>
-            </ul>
-          </li>
-
-          <li>
-            <router-link to="/#">
-              <i class="fa-solid fa-circle-dollar-to-slot fs-4"></i>
-              <span class="nav-text">Donations</span>
-            </router-link>
-          </li>
-        </ul>
-      </div>
+      {{ errorMessage }}
+      <button
+        type="button"
+        class="btn-close"
+        aria-label="Close"
+        @click="errorMessage = ''"
+      ></button>
     </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="image">
+      <img
+        src="../../public/img/logo.png"
+        alt="Company Logo"
+        class="logo img-fluid rounded-4"
+      />
+    </div>
+    <ul class="nav-list">
+      <li class="active">
+        <router-link :to="{ name: 'Dashboard' }">
+          <i class="fa-solid fa-gauge-high"></i>
+          <span class="nav-text">Dashboard</span>
+        </router-link>
+      </li>
+      <li>
+        <router-link :to="{ name: 'Subjects' }">
+          <i class="fa-solid fa-folder"></i>
+          <span class="nav-text">Subjects</span>
+        </router-link>
+      </li>
+      <li>
+        <a href="#" @click.prevent>
+          <i class="fa-solid fa-square-poll-vertical"></i>
+          <span class="nav-text">Rankings</span>
+        </a>
+      </li>
+      <li>
+        <router-link :to="{ name: 'MyScripts' }">
+          <i class="fa-solid fa-file"></i>
+          <span class="nav-text">My Scripts</span>
+        </router-link>
+      </li>
+      <li>
+        <a href="#" @click.prevent>
+          <i class="fa-solid fa-circle-user"></i>
+          <span class="nav-text">My Profile</span>
+        </a>
+      </li>
+
+      <li class="logout">
+        <button
+          class="btn btn-link"
+          @click="logoutUser"
+          :disabled="isLoggingOut"
+        >
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span class="nav-text">
+            <span
+              v-if="isLoggingOut"
+              class="spinner-border spinner-border-sm me-1"
+              role="status"
+              aria-hidden="true"
+            ></span>
+            {{ isLoggingOut ? "Logging out..." : "Logout" }}
+          </span>
+        </button>
+      </li>
+    </ul>
   </div>
 </template>
 
 <style scoped>
-body {
-  background-color: rgba(0, 74, 173, 1) !important;
-  overflow-x: hidden;
-}
-
-#sidebar-wrapper {
-  width: 16.67%;
-  transition: all 0.3s ease;
-  position: relative;
-  flex-shrink: 0;
-}
-
-#sidebar-wrapper.sidebar-narrow {
-  width: 70px !important;
+.alert-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1050;
+  min-width: 300px;
 }
 
 .sidebar {
-  background-color: rgba(0, 74, 173, 1);
-  transition: all 0.3s ease;
-  width: 100%;
-  height: 100vh;
+  position: fixed;
+  top: 20px;
+  bottom: 20px;
+  left: 1%;
+  width: 18%;
+  max-width: 280px;
+  background: linear-gradient(to top, rgba(0, 74, 173, 1) 0%, #3a8fd5 100%);
+  border-radius: 1rem;
+  display: flex;
+  flex-direction: column;
+  padding: 25px 0;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
 }
 
-.sidebar-content li {
+.image {
+  text-align: center;
+  flex-shrink: 0;
+  padding-bottom: 25px;
+  padding-top: 25px;
+}
+
+.logo {
+  width: clamp(100px, 12vw, 140px);
+  height: auto;
+}
+
+.nav-list {
+  flex-grow: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
   list-style: none;
-  padding-top: 10px;
-  padding-left: 10px;
-  margin-bottom: 10px;
-  margin-right: 10px;
-  margin-left: 10px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  padding: 0;
+  margin: 0;
 }
 
-.active {
-  list-style: none;
-  background-color: white;
-  padding-top: 10px;
-  padding-left: 10px;
-  margin-bottom: 10px;
-  border-radius: 10px;
+.nav-list::-webkit-scrollbar {
+  width: 5px;
+}
+.nav-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.25);
+  border-radius: 3px;
+}
+.nav-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
 }
 
-.active a {
-  color: #ad004a !important;
-  text-decoration: none;
+.nav-list li {
+  margin: 0 10%;
+  margin-bottom: 12px;
+  opacity: 0.75;
+  transition: all 0.25s ease-in-out;
+  border-radius: 8px;
 }
 
-.sidebar-content a {
-  text-decoration: none;
-  color: white;
+.nav-list li.active {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-list li:not(.active):hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.06);
+  transform: translateX(3px);
+  cursor: pointer;
+}
+
+.nav-list li > a,
+.nav-list li > button {
   display: flex;
   align-items: center;
-  padding-bottom: 7px;
+  padding: 10px 15px;
+  text-decoration: none;
+  color: white;
+  font-size: 1rem;
+  border-radius: 8px;
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: inherit;
 }
 
-.sidebar-content .nav-text {
-  margin-left: 10px;
+.nav-list i {
+  width: 25px;
+  text-align: center;
+  margin-right: 15px;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.nav-text {
+  flex-grow: 1;
   white-space: nowrap;
 }
 
-.sidebar-narrow .sidebar-content .nav-text,
-.sidebar-narrow .sidebar-logo span,
-.sidebar-narrow .sidebar-content .ad-container {
-  display: none;
+.logout {
+  margin-top: auto;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.sidebar-logo {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 15px 0;
+.logout button {
+  color: #ffdddd;
+  font-weight: 500;
 }
 
-.sidebar-logo img {
-  height: 40px;
+.logout button:hover {
+  color: #ffeded;
+  background-color: rgba(255, 100, 100, 0.1);
 }
 
-.sidebar-logo span {
-  color: white;
-  margin-left: 10px;
-  font-weight: bold;
+.logout button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.toggle-btn {
-  position: absolute;
-  top: 10px;
-  right: -15px;
-  background-color: white;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: rgba(0, 74, 173, 1);
-  cursor: pointer;
-  z-index: 999;
-  border: 2px solid rgba(0, 74, 173, 1);
-}
-
-.ad-container {
-  padding: 10px;
-}
-
-.sidebar-narrow .sidebar-content li {
-  padding-left: 0;
-  text-align: center;
-}
-
-.sidebar-narrow .sidebar-content a {
-  justify-content: center;
-}
-
-.sidebar-narrow .sidebar-logo {
-  justify-content: center;
-}
-
-.submenu {
-  padding-left: 15px;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  padding-top: 0;
-  margin-top: 0;
-}
-
-.submenu.open {
-  max-height: 500px;
-}
-
-.submenu li {
-  margin-left: 10px;
-  padding-left: 10px;
-  margin-bottom: 5px;
-  padding-top: 5px;
-}
-
-.submenu li a {
-  padding: 5px 0;
-  font-size: 0.9em;
-}
-
-.submenu-toggle {
-  width: 100%;
-}
-
-.submenu-icon {
-  margin-left: 10px;
-  margin-right: 10px;
-  transition: transform 0.3s ease;
-}
-
-.submenu-icon.rotate {
-  transform: rotate(-180deg);
-}
-
-.sidebar-narrow .submenu {
-  position: absolute;
-  left: 70px;
-  top: 0;
-  width: 200px;
-  background-color: rgba(0, 74, 173, 0.95);
-  border-radius: 0 10px 10px 0;
-  padding: 10px;
-  z-index: 1000;
-  max-height: 0;
-  overflow: hidden;
-  display: none;
-}
-
-.sidebar-narrow .has-submenu:hover .submenu {
-  max-height: 500px;
-}
-
-.sidebar-narrow .submenu-icon {
-  display: none;
-}
-
-.has-submenu.active {
-  background-color: white;
-}
-
-.has-submenu.active > a {
-  color: #ad004a !important;
-}
-
-.has-submenu.active .submenu-icon {
-  color: #ad004a;
-}
-
-.has-submenu.active .submenu li a {
-  color: white;
-}
-
-.has-submenu.active .submenu {
-  background-color: transparent;
-}
-
-.sidebar-narrow .submenu:not(.open) {
-  display: none;
+@media (max-width: 992px) {
+  .sidebar {
+    width: 20%;
+    left: 1%;
+  }
 }
 
 @media (max-width: 768px) {
-  #sidebar-wrapper {
-    position: fixed;
-    width: 70px !important;
-    z-index: 1030;
+  .sidebar {
+    width: 70px;
+    left: 1%;
+    padding: 15px 0;
   }
-  #sidebar-wrapper.mobile-expanded {
-    width: 250px !important;
+  .nav-text {
+    display: none;
   }
-  #main-content {
-    margin-left: 70px;
-    width: calc(100% - 70px);
-    height: 100vh;
+  .logo {
+    width: 45px;
   }
-  body.sidebar-open::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    right: 0;
-    bottom: 0;
+  .nav-list i {
+    margin-right: 0;
+    font-size: 1.5rem;
+  }
+  .nav-list li > a,
+  .nav-list li > button {
+    justify-content: center;
+    padding: 12px 0;
+  }
+  .logout {
+    border-top: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .sidebar {
+    left: -100%;
+    transition: left 0.3s ease-in-out;
+  }
+  .sidebar.is-open {
     left: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 1020;
-  }
-  #sidebar-wrapper.mobile-expanded .sidebar-logo span,
-  #sidebar-wrapper.mobile-expanded .sidebar-content .nav-text,
-  #sidebar-wrapper.mobile-expanded .sidebar-content .ad-container {
-    display: block;
-  }
-  #sidebar-wrapper.mobile-expanded .sidebar-content li {
-    padding-left: 10px;
-    text-align: left;
-  }
-  #sidebar-wrapper.mobile-expanded .sidebar-content a {
-    justify-content: flex-start;
-  }
-  #sidebar-wrapper.mobile-expanded .submenu {
-    display: block !important;
-  }
-  .toggle-btn {
-    right: 20px;
   }
 }
 </style>

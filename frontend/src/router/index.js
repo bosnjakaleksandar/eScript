@@ -1,9 +1,10 @@
 import { createRouter, createWebHistory } from "vue-router";
+import AuthView from "../views/Auth.vue";
 import DashboardView from "../views/Dashboard.vue";
 import AdminDashboard from "../views/AdminDashboard.vue";
-import AuthView from "../views/Auth.vue";
+import MyScripts from "../views/MyScripts.vue";
+import Subjects from "../views/Subjects.vue";
 import sessionApiService from "../services/api/sessionApiService";
-
 
 const routes = [
   {
@@ -22,6 +23,16 @@ const routes = [
     component: AdminDashboard,
     meta: { requiresAdmin: true },
   },
+  {
+    path: "/myscripts",
+    name: "MyScripts",
+    component: MyScripts,
+  },
+  {
+    path: "/subjects",
+    name: "Subjects",
+    component: Subjects,
+  },
 ];
 
 const router = createRouter({
@@ -34,8 +45,6 @@ router.beforeEach(async (to, from, next) => {
     return next();
   }
 
-  
-  
   try {
     const response = await sessionApiService.getLoggedUser();
     console.log(response);

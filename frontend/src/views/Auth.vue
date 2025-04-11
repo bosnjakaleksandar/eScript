@@ -105,189 +105,195 @@ export default {
 </script>
 
 <template>
-  <div :class="containerClass">
-    <div class="registration">
-      <div class="row">
-        <div
-          class="col-md-6 col-content justify-content-center"
-          :class="[
-            isLoginForm ? 'order-md-1' : 'order-md-2',
-            { 'transition-content': isTransitioning },
-          ]"
-        >
-          <h1 class="pb-2">
-            {{ isLoginForm ? "Welcome to eScript!" : "Create an Account!" }}
-          </h1>
-
-          <div v-if="isLoginForm" class="d-flex align-items-center mb-2">
-            <p class="fs-4 mb-0">Sign in with</p>
-            <div class="social-links ms-3 d-flex gap-2 pt-1">
-              <a href="#"><i class="fa-brands fa-square-facebook fs-3"></i></a>
-              <a href="#"><i class="fa-brands fa-square-instagram fs-3"></i></a>
-              <a href="#"><i class="fa-brands fa-linkedin fs-3"></i></a>
-            </div>
-          </div>
-
+  <div class="body-color">
+    <div :class="containerClass">
+      <div class="registration">
+        <div class="row">
           <div
-            class="divider d-flex align-items-center my-1"
-            v-if="isLoginForm"
+            class="col-md-6 col-content justify-content-center"
+            :class="[
+              isLoginForm ? 'order-md-1' : 'order-md-2',
+              { 'transition-content': isTransitioning },
+            ]"
           >
-            <p class="text-center fw-bold mx-3 mb-0">Or</p>
-          </div>
+            <h1 class="pb-2">
+              {{ isLoginForm ? "Welcome to eScript!" : "Create an Account!" }}
+            </h1>
 
-          <div v-if="error">
-            <div
-              class="alert alert-danger alert-dismissible fade show"
-              role="alert"
-            >
-              {{ error }}
-              <button
-                type="button"
-                class="btn-close"
-                @click="error = ''"
-              ></button>
+            <div v-if="isLoginForm" class="d-flex align-items-center mb-2">
+              <p class="fs-4 mb-0">Sign in with</p>
+              <div class="social-links ms-3 d-flex gap-2 pt-1">
+                <a href="#"
+                  ><i class="fa-brands fa-square-facebook fs-3"></i
+                ></a>
+                <a href="#"
+                  ><i class="fa-brands fa-square-instagram fs-3"></i
+                ></a>
+                <a href="#"><i class="fa-brands fa-linkedin fs-3"></i></a>
+              </div>
             </div>
-          </div>
 
-          <form @submit.prevent="handleSubmit">
-            <!-- Login Form -->
-            <template v-if="isLoginForm">
-              <div class="mb-3">
-                <label for="email" class="form-label">Email address</label>
-                <input
-                  v-model="loginForm.email"
-                  type="email"
-                  class="form-control"
-                  id="email"
-                  aria-describedby="emailHelp"
-                  required
-                />
-                <div id="emailHelp" class="form-text">
-                  We'll never share your email with anyone else.
-                </div>
-              </div>
-              <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input
-                  v-model="loginForm.password"
-                  type="password"
-                  class="form-control"
-                  id="password"
-                  required
-                />
-              </div>
-              <div class="d-flex justify-content-between mb-3 forgot">
-                <div class="form-check mb-0">
-                  <input
-                    v-model="loginForm.rememberMe"
-                    class="form-check-input me-2"
-                    type="checkbox"
-                    id="remember"
-                  />
-                  <label class="form-check-label" for="remember"
-                    >Remember me</label
-                  >
-                </div>
-                <a href="#" class="text-body">Forgot password?</a>
-              </div>
-            </template>
+            <div
+              class="divider d-flex align-items-center my-1"
+              v-if="isLoginForm"
+            >
+              <p class="text-center fw-bold mx-3 mb-0">Or</p>
+            </div>
 
-            <!-- Registration Form -->
-            <template v-else>
-              <div class="row">
-                <div class="col-12 mb-3">
-                  <label for="username" class="form-label">Username</label>
-                  <input
-                    v-model="registerForm.username"
-                    type="text"
-                    class="form-control"
-                    id="username"
-                    required
-                  />
-                </div>
+            <div v-if="error">
+              <div
+                class="alert alert-danger alert-dismissible fade show"
+                role="alert"
+              >
+                {{ error }}
+                <button
+                  type="button"
+                  class="btn-close"
+                  @click="error = ''"
+                ></button>
               </div>
-              <div class="row">
-                <div class="col-12 mb-3">
-                  <label for="registerEmail" class="form-label"
-                    >Email address</label
-                  >
+            </div>
+
+            <form @submit.prevent="handleSubmit">
+              <!-- Login Form -->
+              <template v-if="isLoginForm">
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email address</label>
                   <input
-                    v-model="registerForm.email"
+                    v-model="loginForm.email"
                     type="email"
                     class="form-control"
-                    id="registerEmail"
+                    id="email"
+                    aria-describedby="emailHelp"
                     required
                   />
+                  <div id="emailHelp" class="form-text">
+                    We'll never share your email with anyone else.
+                  </div>
                 </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6 mb-3">
-                  <label for="registerPassword" class="form-label"
-                    >Password</label
-                  >
+                <div class="mb-3">
+                  <label for="password" class="form-label">Password</label>
                   <input
-                    v-model="registerForm.password"
+                    v-model="loginForm.password"
                     type="password"
                     class="form-control"
-                    id="registerPassword"
+                    id="password"
                     required
                   />
                 </div>
-                <div class="col-md-6 mb-3">
-                  <label for="confirmPassword" class="form-label"
-                    >Confirm Password</label
-                  >
+                <div class="d-flex justify-content-between mb-3 forgot">
+                  <div class="form-check mb-0">
+                    <input
+                      v-model="loginForm.rememberMe"
+                      class="form-check-input me-2"
+                      type="checkbox"
+                      id="remember"
+                    />
+                    <label class="form-check-label" for="remember"
+                      >Remember me</label
+                    >
+                  </div>
+                  <a href="#" class="text-body">Forgot password?</a>
+                </div>
+              </template>
+
+              <!-- Registration Form -->
+              <template v-else>
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label for="username" class="form-label">Username</label>
+                    <input
+                      v-model="registerForm.username"
+                      type="text"
+                      class="form-control"
+                      id="username"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-12 mb-3">
+                    <label for="registerEmail" class="form-label"
+                      >Email address</label
+                    >
+                    <input
+                      v-model="registerForm.email"
+                      type="email"
+                      class="form-control"
+                      id="registerEmail"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label for="registerPassword" class="form-label"
+                      >Password</label
+                    >
+                    <input
+                      v-model="registerForm.password"
+                      type="password"
+                      class="form-control"
+                      id="registerPassword"
+                      required
+                    />
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label for="confirmPassword" class="form-label"
+                      >Confirm Password</label
+                    >
+                    <input
+                      v-model="registerForm.confirmPassword"
+                      type="password"
+                      class="form-control"
+                      id="confirmPassword"
+                      required
+                    />
+                  </div>
+                </div>
+                <div class="mb-3 form-check">
                   <input
-                    v-model="registerForm.confirmPassword"
-                    type="password"
-                    class="form-control"
-                    id="confirmPassword"
+                    v-model="registerForm.termsAccepted"
+                    type="checkbox"
+                    class="form-check-input"
+                    id="termsCheck"
                     required
                   />
+                  <label class="form-check-label" for="termsCheck"
+                    >I agree to the Terms of Service</label
+                  >
                 </div>
-              </div>
-              <div class="mb-3 form-check">
-                <input
-                  v-model="registerForm.termsAccepted"
-                  type="checkbox"
-                  class="form-check-input"
-                  id="termsCheck"
-                  required
-                />
-                <label class="form-check-label" for="termsCheck"
-                  >I agree to the Terms of Service</label
-                >
-              </div>
-            </template>
+              </template>
 
-            <button type="submit" class="btn btn-login">
-              {{ isLoginForm ? "Login" : "Register" }}
-            </button>
+              <button type="submit" class="btn btn-login">
+                {{ isLoginForm ? "Login" : "Register" }}
+              </button>
 
-            <p class="small fw-bold mt-2 pt-1 mb-0">
-              {{
-                isLoginForm
-                  ? "Don't have an account?"
-                  : "Already have an account?"
-              }}
-              <a href="#" @click.prevent="toggleForm" class="register">
-                {{ isLoginForm ? "Register" : "Login" }}
-              </a>
-            </p>
-          </form>
-        </div>
-        <div
-          class="col-md-6 col-logo"
-          :class="[
-            isLoginForm ? 'order-md-2' : 'order-md-1',
-            { 'transition-logo': isTransitioning },
-          ]"
-        >
-          <img
-            class="img-fluid logo"
-            src="../../public/img/logo.png"
-            alt="Logo"
-          />
+              <p class="small fw-bold mt-2 pt-1 mb-0">
+                {{
+                  isLoginForm
+                    ? "Don't have an account?"
+                    : "Already have an account?"
+                }}
+                <a href="#" @click.prevent="toggleForm" class="register">
+                  {{ isLoginForm ? "Register" : "Login" }}
+                </a>
+              </p>
+            </form>
+          </div>
+          <div
+            class="col-md-6 col-logo"
+            :class="[
+              isLoginForm ? 'order-md-2' : 'order-md-1',
+              { 'transition-logo': isTransitioning },
+            ]"
+          >
+            <img
+              class="img-fluid logo"
+              src="../../public/img/logo.png"
+              alt="Logo"
+            />
+          </div>
         </div>
       </div>
     </div>
@@ -295,6 +301,9 @@ export default {
 </template>
 
 <style scoped>
+.body-color {
+  background-color: rgba(0, 74, 173, 1) !important;
+}
 .container {
   display: flex;
   justify-content: center;

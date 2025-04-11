@@ -1,13 +1,13 @@
 <script setup>
 import Sidebar from "../components/Sidebar.vue";
-import DashboardItems from "../components/DashboardItems.vue";
+import SubjectsItems from "../components/SubjectsItems.vue";
 </script>
 
 <template>
   <div class="app-container">
     <Sidebar />
     <div class="main-content-wrapper">
-      <DashboardItems />
+      <SubjectsItems />
     </div>
   </div>
 </template>

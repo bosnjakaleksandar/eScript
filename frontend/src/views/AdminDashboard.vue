@@ -3,18 +3,18 @@ import Sidebar from "../components/Sidebar.vue";
 import AdminItems from "../components/AdminItems.vue";
 </script>
 <template>
-  <div class="main-container">
+  <div class="container-custom">
     <!-- Sidebar -->
-    <Sidebar />
-
-    <!-- Main Content -->
-    <AdminItems />
+    <div class="row">
+      <Sidebar />
+      <!-- Main Content -->
+      <AdminItems />
+    </div>
   </div>
 </template>
 <style scoped>
-.main-container {
-  display: flex;
-  width: 100%;
-  height: 100vh;
+.container-custom {
+  margin-left: 3%;
+  margin-right: 3%;
 }
 </style>

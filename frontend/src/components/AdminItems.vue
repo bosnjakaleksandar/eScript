@@ -2,8 +2,6 @@
 import DashboardData from "../services/api/DashboardData";
 import Subjects from "../services/api/Subjects";
 import addSubject from "../services/api/AddSubject";
-import createNote from "../services/api/CreateNote";
-import Logout from "../services/api/Logout";
 
 export default {
   data() {
@@ -18,12 +16,11 @@ export default {
       newSubjectName: "",
       selectedYear: null,
 
-      scriptText: "",
-
       errorMessage: "",
       successMessage: "",
       isLoading: false,
-      isLoggingOut: false,
+
+      now: new Date(),
     };
   },
   methods: {
@@ -119,70 +116,6 @@ export default {
       }
     },
 
-    async submitScript() {
-      if (!this.scriptText || !this.selectedCategory) {
-        this.errorMessage =
-          "Please fill in all required fields (script text and subject category)";
-        return;
-      }
-
-      try {
-        this.isLoading = true;
-        this.errorMessage = "";
-        this.successMessage = "";
-
-        const response = await createNote.createNote({
-          content: this.scriptText,
-          subject_id: this.selectedCategory,
-        });
-
-        const data = response;
-
-        if (data && data.success) {
-          this.scriptText = "";
-          this.selectedCategory = null;
-          this.successMessage = "Script submitted successfully!";
-        } else {
-          this.errorMessage =
-            data && data.error
-              ? data.error
-              : "Failed to submit script. Unknown error format or success=false.";
-          if (data) {
-            console.log("Error response data:", data);
-          }
-        }
-      } catch (err) {
-        console.error("Submit error in submitScript:", err);
-        this.errorMessage = `Network or processing error while submitting script: ${err.message}`;
-      } finally {
-        this.isLoading = false;
-      }
-    },
-
-    async logoutUser() {
-      this.isLoggingOut = true;
-      this.errorMessage = "";
-
-      try {
-        const response = await Logout.logout();
-
-        if (response && response.success) {
-          localStorage.removeItem("user");
-          this.$router.push("/");
-        } else {
-          this.errorMessage =
-            response && response.error
-              ? response.error
-              : "Logout failed on the server.";
-        }
-      } catch (err) {
-        console.error("Logout error:", err);
-        this.errorMessage = "Network error during logout. Please try again.";
-      } finally {
-        this.isLoggingOut = false;
-      }
-    },
-
     checkUserRole() {
       const userData = localStorage.getItem("user");
       if (userData) {
@@ -198,55 +131,25 @@ export default {
     this.fetchDashboardData();
     this.fetchSubjects();
   },
+
+  computed: {
+    formattedDate() {
+      const options = {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      };
+      return this.now.toLocaleString("en-US", options);
+    },
+  },
 };
 </script>
 
 <template>
-  <div id="main-content" class="content bg-body-tertiary">
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg bg-white shadow-sm p-3 rounded">
-      <div class="container-fluid">
-        <a class="navbar-brand"></a>
-        <div class="collapse navbar-collapse" id="navbarNav">
-          <ul class="navbar-nav ms-auto">
-            <li class="nav-item">
-              <router-link class="nav-link d-flex" to="#">
-                <i class="fa-solid fa-scroll fs-4"></i>
-                <span class="nav-text ms-2">My Scripts</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link d-flex" to="#">
-                <i class="fa-solid fa-bookmark fs-4"></i>
-                <span class="nav-text ms-2">Bookmarks</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <router-link class="nav-link d-flex" to="#">
-                <i class="fa-solid fa-user-tie fs-4"></i>
-                <span class="nav-text ms-2">{{ userName }}</span>
-              </router-link>
-            </li>
-            <li class="nav-item">
-              <button
-                class="btn btn-danger"
-                @click="logoutUser"
-                :disabled="isLoggingOut"
-              >
-                <span
-                  v-if="isLoggingOut"
-                  class="spinner-border spinner-border-sm"
-                  role="status"
-                  aria-hidden="true"
-                ></span>
-                {{ isLoggingOut ? "Logging out..." : "Log Out" }}
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </nav>
-
+  <div class="main-content content">
     <!-- Alert Messages -->
     <div class="container-fluid mt-3" v-if="errorMessage">
       <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -277,12 +180,29 @@ export default {
       </div>
     </div>
 
-    <!-- DASHBOARD STATS -->
     <div class="container-fluid">
-      <h1 class="ps-3 pt-4">
+      <!--  WELCOME CONTENT -->
+      <div class="row">
+        <div class="welcome-content rounded-4">
+          <div class="date-time">
+            {{ formattedDate }}
+          </div>
+          <div class="title">
+            <h2>Welcome back, {{ userName }}!</h2>
+            <p>Always stay updated in your student portal</p>
+          </div>
+          <img src="../../public/img/Student.png" class="img-fluid" />
+        </div>
+      </div>
+      <!-- <h1 class="ps-3 pt-4">
         {{ userRole === "admin" ? "Admin Dashboard" : "Dashboard" }}
-      </h1>
-      <div class="row dash-row">
+      </h1> -->
+
+      <!-- DASHBOARD STATS -->
+      <div class="row ms-3 mt-4">
+        <h3>Admin dashboard</h3>
+      </div>
+      <!-- <div class="row dash-row">
         <div class="col-md-4">
           <div class="card dash-card border-0 shadow">
             <div class="row">
@@ -309,7 +229,7 @@ export default {
             <h4 class="fs-3">{{ subjectsCount }}</h4>
           </div>
         </div>
-      </div>
+      </div> -->
 
       <!-- ADMIN SUBJECT CREATION -->
       <div class="row big-card-row" v-if="userRole === 'admin'">
@@ -361,105 +281,37 @@ export default {
           </div>
         </div>
       </div>
-
-      <!-- SCRIPT SUBMIT FORM -->
-      <div class="row big-card-row">
-        <div class="col-md-12">
-          <div class="card border-0 shadow mb-3">
-            <div class="card-body">
-              <h5 class="mb-3">Add New Script</h5>
-              <form @submit.prevent="submitScript">
-                <div class="mb-3">
-                  <label for="scriptInput" class="form-label">
-                    A place to exchange knowledge through scripts
-                  </label>
-                  <textarea
-                    class="form-control"
-                    id="scriptInput"
-                    v-model="scriptText"
-                    rows="10"
-                    placeholder="Write your script here..."
-                    required
-                  ></textarea>
-                </div>
-                <div class="mb-3">
-                  <label class="form-label">Select Subject:</label>
-                  <div class="checks mb-3">
-                    <div v-if="subjects.length === 0" class="text-muted">
-                      No subjects available. Please add subjects first.
-                    </div>
-                    <div
-                      v-for="subject in subjects"
-                      :key="subject.id"
-                      class="form-check"
-                    >
-                      <input
-                        class="form-check-input"
-                        type="radio"
-                        :id="'radio' + subject.id"
-                        :value="subject.id"
-                        v-model="selectedCategory"
-                        name="subject"
-                        required
-                      />
-                      <label
-                        class="form-check-label"
-                        :for="'radio' + subject.id"
-                      >
-                        {{ subject.name }} (Year {{ subject.year }})
-                      </label>
-                    </div>
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  class="btn btn-primary"
-                  :disabled="isLoading || subjects.length === 0"
-                >
-                  {{ isLoading ? "Submitting..." : "Submit Script" }}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-#main-content {
-  flex: 1;
-  transition: all 0.3s ease;
-  border-top-left-radius: 10px;
-  border-bottom-left-radius: 10px;
-  overflow-y: auto;
-  padding-bottom: 2rem;
+.main-content {
+  width: 80%;
+  margin-top: 2%;
 }
-#main-content a {
-  text-decoration: none;
+
+.welcome-content {
+  position: relative;
+  height: 35vh;
+  background: linear-gradient(to right, rgba(0, 74, 173, 1) 0%, #3a8fd5 100%);
+  width: 100%;
+  margin-left: 1%;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
-.dash-row {
-  margin-left: 20px !important;
-  margin-right: 20px !important;
+.welcome-content img {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: auto;
+  height: auto;
 }
-.dash-card {
-  padding: 20px;
-  margin-top: 5%;
-  margin-bottom: 5%;
-}
-.dash-card i {
-  font-size: 50px;
-  color: #ad004a;
-}
-.dash-card h2 {
-  opacity: 70%;
-}
-.big-card-row {
-  margin-left: 20px !important;
-  margin-right: 20px !important;
-}
-.form-check {
-  margin-bottom: 0.5rem;
+.title,
+.date-time {
+  color: white;
+  margin-left: 30px;
 }
 </style>

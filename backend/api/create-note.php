@@ -17,10 +17,11 @@ $input = file_get_contents("php://input");
 $data = json_decode($input);
 
 if (
+    !isset($data->title) || empty($data->title) ||
     !isset($data->content) || empty($data->content) ||
     !isset($data->subject_id) || empty($data->subject_id)
 ) {
-    echo json_encode(['success' => false, 'error' => 'Missing required fields']);
+    echo json_encode(['success' => false, 'error' => 'Missing required fields (title, content, subject_id)']);
     exit;
 }
 
@@ -41,8 +42,8 @@ try {
     }
 
     $user_id = get_user_id();
-    $stmt = $conn->prepare("INSERT INTO notes (user_id, subject_id, content) VALUES (?, ?, ?)");
-    $stmt->bind_param("iis", $user_id, $data->subject_id, $data->content);
+    $stmt = $conn->prepare("INSERT INTO notes (user_id, subject_id, title, content) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("iiss", $user_id, $data->subject_id, $data->title, $data->content);
     $success = $stmt->execute();
 
     if ($success) {
@@ -53,6 +54,7 @@ try {
             'note' => [
                 'id' => $note_id,
                 'subject_id' => $data->subject_id,
+                'title' => $data->title,
                 'content' => $data->content
             ]
         ]);
