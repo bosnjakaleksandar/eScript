@@ -1,6 +1,6 @@
 <script>
 export default {
-  name: "LastScriptCard",
+  name: "LastNoteCard",
   props: {
     note: {
       type: Object,

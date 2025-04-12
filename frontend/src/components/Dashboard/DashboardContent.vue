@@ -6,7 +6,7 @@ import PopularSubjectsService from "../../services/api/PopularSubjects";
 import WelcomeBanner from "./WelcomeBanner.vue";
 import StatCard from "./StatCard.vue";
 import PopularSubjectsList from "./PopularSubjectsList.vue";
-import LastScriptCard from "./LastScriptCard.vue";
+import LastNoteCard from "./LastNoteCard.vue";
 import AddSubjectModal from "./AddSubjectModal.vue";
 
 export default {
@@ -15,7 +15,7 @@ export default {
     WelcomeBanner,
     StatCard,
     PopularSubjectsList,
-    LastScriptCard,
+    LastNoteCard,
     AddSubjectModal,
   },
   data() {
@@ -28,13 +28,10 @@ export default {
       successMessage: "",
       isLoading: false,
       now: new Date(),
-
       showAddSubjectModal: false,
-
       lastNote: null,
       isLoadingLastNote: false,
       lastNoteError: "",
-
       popularSubjects: [],
       isLoadingPopularSubjects: false,
       popularSubjectsError: "",
@@ -60,7 +57,6 @@ export default {
         this.isLoading = false;
       }
     },
-
     async fetchLastNote() {
       this.isLoadingLastNote = true;
       this.lastNoteError = "";
@@ -79,7 +75,6 @@ export default {
         this.isLoadingLastNote = false;
       }
     },
-
     async fetchPopularSubjects() {
       this.isLoadingPopularSubjects = true;
       this.popularSubjectsError = "";
@@ -99,7 +94,6 @@ export default {
         this.isLoadingPopularSubjects = false;
       }
     },
-
     checkUserRole() {
       try {
         const userData = localStorage.getItem("user");
@@ -117,10 +111,10 @@ export default {
         this.userRole = "";
       }
     },
-
     handleSubjectAdded(addedSubject) {
       console.log("Subject added:", addedSubject);
       this.subjectsCount++;
+      this.fetchPopularSubjects();
     },
   },
   mounted() {
@@ -278,12 +272,10 @@ export default {
     />
   </div>
 </template>
-
 <style scoped>
 .main-content {
   width: 100%;
 }
-
 .students img {
   border: 3px solid rgba(0, 74, 173, 1);
 }
@@ -292,7 +284,6 @@ export default {
 }
 @media (max-width: 992px) {
   .dash-row .col-lg-4 {
-    /* Ово се односи на StatCard, можда боље да буде унутар StatCard или глобално */
     flex: 0 0 50%;
     max-width: 50%;
   }
@@ -314,79 +305,12 @@ export default {
 }
 @media (max-width: 576px) {
   .dash-row > [class*="col-"] {
-    /* Ово се односи на StatCard */
     flex: 0 0 100%;
     max-width: 100%;
   }
-  /* Ово се односи на PopularSubjectsList */
   .col-md-9 > .row.mt-4 > .col-md-6 {
     flex: 0 0 100%;
     max-width: 100%;
-  }
-}
-
-.alert {
-  position: relative;
-  padding: 1rem 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid transparent;
-  border-radius: 0.25rem;
-}
-.alert-danger {
-  color: #842029;
-  background-color: #f8d7da;
-  border-color: #f5c2c7;
-}
-.alert-success {
-  color: #0f5132;
-  background-color: #d1e7dd;
-  border-color: #badbcc;
-}
-.alert-dismissible {
-  padding-right: 3rem;
-}
-.alert-dismissible .btn-close {
-  position: absolute;
-  top: 0;
-  right: 0;
-  z-index: 2;
-  padding: 1.25rem 1rem;
-}
-.btn-close {
-  box-sizing: content-box;
-  width: 1em;
-  height: 1em;
-  padding: 0.25em 0.25em;
-  color: #000;
-  background: transparent
-    url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23000'%3e%3cpath d='M.293.293a1 1 0 0 1 1.414 0L8 6.586 14.293.293a1 1 0 1 1 1.414 1.414L9.414 8l6.293 6.293a1 1 0 0 1-1.414 1.414L8 9.414l-6.293 6.293a1 1 0 0 1-1.414-1.414L6.586 8 .293 1.707a1 1 0 0 1 0-1.414z'/%3e%3c/svg%3e")
-    center/1em auto no-repeat;
-  border: 0;
-  border-radius: 0.25rem;
-  opacity: 0.5;
-}
-.btn-close:hover {
-  opacity: 0.75;
-}
-.spinner-border {
-  display: inline-block;
-  width: 2rem;
-  height: 2rem;
-  vertical-align: -0.125em;
-  border: 0.25em solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  -webkit-animation: 0.75s linear infinite spinner-border;
-  animation: 0.75s linear infinite spinner-border;
-}
-@-webkit-keyframes spinner-border {
-  to {
-    transform: rotate(360deg);
-  }
-}
-@keyframes spinner-border {
-  to {
-    transform: rotate(360deg);
   }
 }
 </style>

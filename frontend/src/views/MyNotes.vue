@@ -1,6 +1,6 @@
 <script setup>
 import Sidebar from "../components/Sidebar.vue";
-import MyNotesContent from "../components/MyNotesContent.vue";
+import MyNotesContent from "../components/Notes/MyNotesContent.vue";
 </script>
 
 <template>
