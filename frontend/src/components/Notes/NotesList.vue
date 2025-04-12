@@ -116,9 +116,9 @@ export default {
 
     <div
       v-else-if="!notes || notes.length === 0"
-      class="text-muted no-notes-message"
+      class="text-muted no-notes-message text-center"
     >
-      <i class="fas fa-sticky-note fa-2x mb-3"></i>
+      <i class="fas fa-sticky-note fa-2x my-3"></i>
       <p>
         You haven't created any notes yet.<br />Click "Add Note" to create one.
       </p>
