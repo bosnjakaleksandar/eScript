@@ -1,13 +1,13 @@
 <script setup>
 import Sidebar from "../components/Sidebar.vue";
-import MyScriptItems from "../components/MyScriptItems.vue";
+import MyNotesContent from "../components/MyNotesContent.vue";
 </script>
 
 <template>
   <div class="app-container">
     <Sidebar />
     <div class="main-content-wrapper">
-      <MyScriptItems />
+      <MyNotesContent />
     </div>
   </div>
 </template>

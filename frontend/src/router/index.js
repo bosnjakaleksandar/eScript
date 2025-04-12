@@ -1,8 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
 import AuthView from "../views/Auth.vue";
 import DashboardView from "../views/Dashboard.vue";
-import AdminDashboard from "../views/AdminDashboard.vue";
-import MyScripts from "../views/MyScripts.vue";
+import MyNotes from "../views/MyNotes.vue";
 import Subjects from "../views/Subjects.vue";
 import sessionApiService from "../services/api/sessionApiService";
 
@@ -18,15 +17,9 @@ const routes = [
     component: DashboardView,
   },
   {
-    path: "/admin-dashboard",
-    name: "AdminDashboard",
-    component: AdminDashboard,
-    meta: { requiresAdmin: true },
-  },
-  {
-    path: "/myscripts",
-    name: "MyScripts",
-    component: MyScripts,
+    path: "/mynotes",
+    name: "MyNotes",
+    component: MyNotes,
   },
   {
     path: "/subjects",

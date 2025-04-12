@@ -1,6 +1,5 @@
 <script>
-import login from "../services/api/Auth";
-import register from "../services/api/Auth";
+import AuthService from "../services/api/Auth";
 
 export default {
   data() {
@@ -21,72 +20,83 @@ export default {
         termsAccepted: false,
       },
       error: "",
+      isLoading: false,
     };
   },
   methods: {
     toggleForm() {
+      this.error = "";
       this.isTransitioning = true;
-
       setTimeout(() => {
         this.isLoginForm = !this.isLoginForm;
-
-        setTimeout(() => {
-          this.isTransitioning = false;
-        }, 500);
+        this.isTransitioning = false;
       }, 300);
     },
 
     async handleSubmit() {
       this.error = "";
+      this.isLoading = true;
 
       try {
         let response;
 
         if (this.isLoginForm) {
-          response = await login.login(this.loginForm);
+          response = await AuthService.login(this.loginForm);
         } else {
           if (
             this.registerForm.password !== this.registerForm.confirmPassword
           ) {
             this.error = "Passwords do not match.";
+            this.isLoading = false;
             return;
           }
-
           if (!this.registerForm.termsAccepted) {
             this.error = "Please accept the terms and conditions.";
+            this.isLoading = false;
             return;
           }
-
-          response = await register.register(this.registerForm);
+          const registrationData = {
+            username: this.registerForm.username,
+            email: this.registerForm.email,
+            password: this.registerForm.password,
+          };
+          response = await AuthService.register(registrationData);
         }
-
-        if (response.success) {
+        if (response && response.success) {
           console.log(
             this.isLoginForm ? "Login success:" : "Registration success:",
             response
           );
 
-          localStorage.setItem("user", JSON.stringify(response.user));
-
-          if (response.role === "admin") {
-            this.$router.push("/admin-dashboard");
+          if (response.user) {
+            localStorage.setItem("user", JSON.stringify(response.user));
+          } else if (this.isLoginForm) {
+            console.warn("User object missing in login response");
           } else {
-            this.$router.push("/dashboard");
+            console.log(
+              "Registration successful, user data might not be in response for auto-login."
+            );
           }
+          this.$router.push("/dashboard");
         } else {
           this.error =
-            response.error ||
+            response?.error ||
             (this.isLoginForm ? "Login failed." : "Registration failed.");
         }
       } catch (error) {
         console.error("Error during login/register:", error);
-        this.error = error.message || "An unexpected error occurred.";
+        this.error =
+          error?.response?.data?.error ||
+          error?.message ||
+          "An unexpected error occurred.";
+      } finally {
+        this.isLoading = false;
       }
     },
 
     updateContainerClass() {
       if (window.innerWidth <= 768) {
-        this.containerClass = "container-fluid";
+        this.containerClass = "container-fluid p-0";
       } else {
         this.containerClass = "container";
       }
@@ -97,8 +107,7 @@ export default {
     this.updateContainerClass();
     window.addEventListener("resize", this.updateContainerClass);
   },
-
-  beforeDestroy() {
+  beforeUnmount() {
     window.removeEventListener("resize", this.updateContainerClass);
   },
 };

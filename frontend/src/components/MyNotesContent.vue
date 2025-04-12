@@ -2,15 +2,14 @@
 import Subjects from "../services/api/Subjects";
 import createNote from "../services/api/CreateNote";
 import getUserNotes from "../services/api/GetUserNotes";
-
 export default {
   components: {},
   data() {
     return {
       subjects: [],
       selectedCategory: null,
-      scriptTitle: "",
-      scriptText: "",
+      noteTitle: "",
+      noteText: "",
 
       errorMessage: "",
       successMessage: "",
@@ -19,7 +18,7 @@ export default {
 
       userNotes: [],
 
-      showAddScriptModal: false,
+      showAddNoteModal: false,
 
       expandedNoteId: null,
       notePreviewLength: 100,
@@ -28,29 +27,18 @@ export default {
   methods: {
     async fetchSubjects() {
       if (this.isLoading || this.subjects.length > 0) return;
-
       this.isLoading = true;
       this.errorMessage = "";
       try {
         const response = await Subjects.getSubjects();
-        const data = response;
-
-        if (data && data.success) {
-          this.subjects = data.subjects || [];
+        if (response && response.success) {
+          this.subjects = response.subjects || [];
         } else {
-          console.error(
-            "Error fetching subjects for modal:",
-            data ? data.error : "Unknown error"
-          );
           this.errorMessage = `Failed to load subjects for modal${
-            data && data.error ? ": " + data.error : "."
+            response?.error ? ": " + response.error : "."
           }`;
-          if (data && data.debug) {
-            console.log("Debug info:", data.debug);
-          }
         }
       } catch (err) {
-        console.error("Fetch subjects network/processing error:", err);
         this.errorMessage = "Network error while loading subjects for modal.";
       } finally {
         this.isLoading = false;
@@ -62,31 +50,24 @@ export default {
       this.errorMessage = "";
       try {
         const response = await getUserNotes.getUserNotes();
-        const data = response;
-
-        if (data && data.success) {
-          this.userNotes = data.notes || [];
+        if (response && response.success) {
+          this.userNotes = response.notes || [];
         } else {
-          console.error(
-            "Error fetching user notes:",
-            data ? data.error : "Unknown error"
-          );
           this.errorMessage = `Failed to load your notes${
-            data && data.error ? ": " + data.error : "."
+            response?.error ? ": " + response.error : "."
           }`;
         }
       } catch (error) {
-        console.error("Fetch user notes network/processing error:", error);
         this.errorMessage = "Network error while loading your notes.";
       } finally {
         this.isLoadingNotes = false;
       }
     },
 
-    async submitScript() {
-      if (!this.scriptText || !this.selectedCategory || !this.scriptTitle) {
+    async submitNote() {
+      if (!this.noteText || !this.selectedCategory || !this.noteTitle) {
         this.errorMessage =
-          "Please fill in all required fields (title, script text and subject category).";
+          "Please fill in all required fields (title, note text and subject category).";
         this.successMessage = "";
         return;
       }
@@ -97,33 +78,31 @@ export default {
 
       try {
         const response = await createNote.createNote({
-          title: this.scriptTitle,
-          content: this.scriptText,
+          title: this.noteTitle,
+          content: this.noteText,
           subject_id: this.selectedCategory,
         });
-        const data = response;
 
-        if (data && data.success) {
-          this.successMessage = "Script submitted successfully!";
+        if (response && response.success) {
+          this.successMessage = "Note submitted successfully!";
           this.expandedNoteId = null;
           await this.fetchUserNotes();
+          ха;
           setTimeout(() => {
-            this.scriptTitle = "";
-            this.scriptText = "";
+            this.noteTitle = "";
+            this.noteText = "";
             this.selectedCategory = null;
-            this.closeAddScriptModal();
+            this.closeAddNoteModal();
             this.successMessage = "";
           }, 1500);
         } else {
           this.errorMessage =
-            data && data.error
-              ? data.error
-              : "Failed to submit script. Please try again.";
-          if (data) console.log("Error response data:", data);
+            response?.error || "Failed to submit note. Please try again.";
+          if (response) console.log("Error response data:", response);
         }
       } catch (err) {
-        console.error("Submit script network/processing error:", err);
-        this.errorMessage = `Error submitting script: ${
+        console.error("Submit note network/processing error:", err);
+        this.errorMessage = `Error submitting note: ${
           err.message || "Network or server error"
         }. Please try again.`;
       } finally {
@@ -131,20 +110,20 @@ export default {
       }
     },
 
-    openAddScriptModal() {
+    openAddNoteModal() {
       this.errorMessage = "";
       this.successMessage = "";
-      this.scriptTitle = "";
-      this.scriptText = "";
+      this.noteTitle = "";
+      this.noteText = "";
       this.selectedCategory = null;
       if (this.subjects.length === 0) {
         this.fetchSubjects();
       }
-      this.showAddScriptModal = true;
+      this.showAddNoteModal = true;
     },
 
-    closeAddScriptModal() {
-      this.showAddScriptModal = false;
+    closeAddNoteModal() {
+      this.showAddNoteModal = false;
     },
 
     toggleNoteExpansion(noteId) {
@@ -194,19 +173,19 @@ export default {
 </script>
 
 <template>
-  <div class="my-scripts-view-container">
+  <div class="my-notes-view-container">
     <div class="notes-header">
       <h5>Your Notes</h5>
       <button
-        @click="openAddScriptModal"
-        class="btn btn-sm btn-primary add-script-button"
+        @click="openAddNoteModal"
+        class="btn btn-sm btn-primary add-note-button"
       >
-        <i class="fa-solid fa-plus me-1"></i> Add Script
+        <i class="fa-solid fa-plus me-1"></i> Add Note
       </button>
     </div>
 
     <div
-      v-if="errorMessage && !showAddScriptModal"
+      v-if="errorMessage && !showAddNoteModal"
       class="alert alert-danger mx-auto mt-3"
       role="alert"
       style="max-width: 95%"
@@ -228,7 +207,7 @@ export default {
       >
         <i class="fas fa-sticky-note fa-2x mb-3"></i>
         <p>
-          You haven't created any notes yet.<br />Click "Add Script" to create
+          You haven't created any notes yet.<br />Click "Add Note" to create
           one.
         </p>
       </div>
@@ -269,31 +248,31 @@ export default {
       </div>
     </div>
   </div>
+
   <transition name="modal-fade">
     <div
       class="modal-overlay"
-      v-if="showAddScriptModal"
-      @click.self="closeAddScriptModal"
+      v-if="showAddNoteModal"
+      @click.self="closeAddNoteModal"
     >
       <div
         class="modal-content"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modalTitle"
+        aria-labelledby="addNoteModalTitle"
       >
         <button
           class="modal-close-btn"
-          @click="closeAddScriptModal"
+          @click="closeAddNoteModal"
           aria-label="Close modal"
         >
           &times;
         </button>
 
-        <div class="add-new-script-modal">
-          <h5 class="mb-3 modal-title" id="modalTitle">Add New Script</h5>
-
+        <div class="add-new-note-modal">
+          <h5 class="mb-3 modal-title" id="addNoteModalTitle">Add New Note</h5>
           <div
-            v-if="errorMessage && showAddScriptModal"
+            v-if="errorMessage && showAddNoteModal"
             class="alert alert-danger alert-dismissible fade show"
             role="alert"
           >
@@ -306,36 +285,36 @@ export default {
             ></button>
           </div>
           <div
-            v-if="successMessage && showAddScriptModal"
+            v-if="successMessage && showAddNoteModal"
             class="alert alert-success"
             role="status"
           >
             {{ successMessage }}
           </div>
 
-          <form @submit.prevent="submitScript" novalidate>
+          <form @submit.prevent="submitNote" novalidate>
             <div class="mb-3">
-              <label for="modalTitleInput" class="form-label">Title</label>
+              <label for="modalNoteTitleInput" class="form-label">Title</label>
               <input
                 type="text"
                 class="form-control"
-                id="modalTitleInput"
-                v-model.trim="scriptTitle"
-                placeholder="Enter script title"
+                id="modalNoteTitleInput"
+                v-model.trim="noteTitle"
+                placeholder="Enter note title"
                 required
                 aria-required="true"
               />
             </div>
             <div class="mb-3">
-              <label for="modalScriptInput" class="form-label"
-                >Script Content</label
+              <label for="modalNoteTextInput" class="form-label"
+                >Note Content</label
               >
               <textarea
                 class="form-control"
-                id="modalScriptInput"
-                v-model="scriptText"
+                id="modalNoteTextInput"
+                v-model="noteText"
                 rows="8"
-                placeholder="Write your script here..."
+                placeholder="Write your note here..."
                 required
                 aria-required="true"
               ></textarea>
@@ -371,16 +350,16 @@ export default {
                   <input
                     class="form-check-input"
                     type="radio"
-                    :id="'modalRadio' + subject.id"
+                    :id="'modalNoteRadio' + subject.id"
                     :value="subject.id"
                     v-model="selectedCategory"
-                    name="modalSubject"
+                    name="modalNoteSubject"
                     required
                     aria-required="true"
                   />
                   <label
                     class="form-check-label"
-                    :for="'modalRadio' + subject.id"
+                    :for="'modalNoteRadio' + subject.id"
                   >
                     {{ subject.name }}
                     <span v-if="subject.year" class="text-muted small"
@@ -394,7 +373,7 @@ export default {
               <button
                 type="button"
                 class="btn btn-secondary me-2"
-                @click="closeAddScriptModal"
+                @click="closeAddNoteModal"
               >
                 Cancel
               </button>
@@ -411,7 +390,7 @@ export default {
                   role="status"
                   aria-hidden="true"
                 ></span>
-                {{ isLoading ? " Submitting..." : "Submit Script" }}
+                {{ isLoading ? " Submitting..." : "Submit Note" }}
               </button>
             </div>
           </form>
@@ -422,12 +401,17 @@ export default {
 </template>
 
 <style scoped>
-.my-scripts-view-container {
+.my-notes-view-container {
   width: 100%;
   margin: 0 auto;
   padding: 20px;
 }
-
+.add-note-button {
+  font-size: 0.9rem;
+}
+.add-new-note-modal {
+  width: 100%;
+}
 .notes-header {
   display: flex;
   justify-content: space-between;
@@ -436,17 +420,11 @@ export default {
   padding-bottom: 0.5rem;
   border-bottom: 1px solid #e0e0e0;
 }
-
 .notes-header h5 {
   margin-bottom: 0;
   font-weight: 600;
   color: #333;
 }
-
-.add-script-button {
-  font-size: 0.9rem;
-}
-
 .loading-message,
 .no-notes-message {
   padding: 30px 20px;
@@ -462,12 +440,10 @@ export default {
 .no-notes-message i {
   color: #adb5bd;
 }
-
 .list-group {
   border-radius: 0.375rem;
   overflow: hidden;
 }
-
 .list-group-item.note-item {
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -480,34 +456,28 @@ export default {
 .list-group-item.note-item:last-child {
   margin-bottom: 0;
 }
-
 .list-group-item.note-item:hover {
   background-color: #f8f9fa;
   border-color: #ced4da;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.06);
 }
-
 .list-group-item.note-item.is-expanded {
   background-color: #f0f2f5;
   border-color: #adb5bd;
 }
-
 .note-header-line {
   margin-bottom: 0.5rem;
 }
-
 .note-title {
   font-weight: 600;
   color: #212529;
 }
-
 .note-date {
   font-size: 0.85em;
   white-space: nowrap;
   padding-left: 10px;
   color: #6c757d;
 }
-
 .note-content {
   white-space: pre-wrap;
   word-break: break-word;
@@ -516,15 +486,12 @@ export default {
   line-height: 1.6;
   transition: all 0.3s ease-out;
 }
-
 .read-more-indicator {
   color: #0d6efd;
   font-size: 0.85em;
   margin-left: 5px;
   font-style: italic;
 }
-
-/* Модал стилови */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -566,10 +533,7 @@ export default {
 .modal-close-btn:hover {
   color: #495057;
 }
-.add-new-script-modal {
-  width: 100%;
-}
-.add-new-script-modal .modal-title {
+.add-new-note-modal .modal-title {
   margin-bottom: 1.5rem !important;
   font-weight: 500;
   color: #343a40;
@@ -613,8 +577,6 @@ export default {
   font-size: 0.9rem;
   padding: 0.4rem 1rem;
 }
-
-/* Транзиције */
 .modal-fade-enter-active,
 .modal-fade-leave-active {
   transition: opacity 0.3s ease;
@@ -635,8 +597,6 @@ export default {
 .fade-leave-from {
   opacity: 1;
 }
-
-/* Алатке */
 .spinner-border-sm {
   width: 1em;
   height: 1em;

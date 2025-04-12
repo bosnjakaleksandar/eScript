@@ -104,9 +104,9 @@ export default {
         </a>
       </li>
       <li>
-        <router-link :to="{ name: 'MyScripts' }">
+        <router-link :to="{ name: 'MyNotes' }">
           <i class="fa-solid fa-file"></i>
-          <span class="nav-text">My Scripts</span>
+          <span class="nav-text">My Notes</span>
         </router-link>
       </li>
       <li>
@@ -203,19 +203,6 @@ export default {
   border-radius: 8px;
 }
 
-.nav-list li.active {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.1);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.nav-list li:not(.active):hover {
-  opacity: 1;
-  background-color: rgba(255, 255, 255, 0.06);
-  transform: translateX(3px);
-  cursor: pointer;
-}
-
 .nav-list li > a,
 .nav-list li > button {
   display: flex;
@@ -230,6 +217,20 @@ export default {
   background: none;
   text-align: left;
   font-family: inherit;
+  transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.nav-list li > a.router-link-exact-active {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.nav-list li:not(:has(> a.router-link-exact-active)):hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.06);
+  transform: translateX(3px);
+  cursor: pointer;
 }
 
 .nav-list i {
@@ -269,7 +270,6 @@ export default {
 @media (max-width: 992px) {
   .sidebar {
     width: 20%;
-    left: 1%;
   }
 }
 
@@ -303,9 +303,42 @@ export default {
   .sidebar {
     left: -100%;
     transition: left 0.3s ease-in-out;
+    width: 250px;
   }
   .sidebar.is-open {
     left: 0;
+  }
+  .sidebar.is-open .nav-text {
+    display: inline;
+  }
+  .sidebar.is-open .nav-list i {
+    margin-right: 15px;
+  }
+  .sidebar.is-open .nav-list li > a,
+  .sidebar.is-open .nav-list li > button {
+    justify-content: flex-start;
+  }
+}
+
+.spinner-border-sm {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  border: 0.15em solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  -webkit-animation: 0.75s linear infinite spinner-border;
+  animation: 0.75s linear infinite spinner-border;
+}
+@-webkit-keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spinner-border {
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
