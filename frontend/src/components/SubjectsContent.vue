@@ -186,10 +186,6 @@ h2 {
   font-size: 3rem;
   color: #0056b3; 
 }
-/* Опционо: Промена боје иконе на ховер картице */
-/* .subject-card:hover .subject-icon {
-  color: #007bff;
-} */
 
 .subject-name {
   font-size: 1.15rem;
@@ -199,13 +195,13 @@ h2 {
 }
 
 .subject-year {
-  font-size: 0.85rem; /* Мањи фонт за годину */
-  color: #777; /* Сивља боја */
+  font-size: 0.85rem;
+  color: #777;
   margin-bottom: 0;
 }
 
 .alert {
-  margin-top: 25px; /* Повећана горња маргина */
+  margin-top: 25px;
   margin-bottom: 25px;
 }
 </style>

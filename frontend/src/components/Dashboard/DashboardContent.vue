@@ -10,7 +10,7 @@ import LastNoteCard from "./LastNoteCard.vue";
 import AddSubjectModal from "./AddSubjectModal.vue";
 
 export default {
-  name: "DashboardItems",
+  name: "DashboardContent",
   components: {
     WelcomeBanner,
     StatCard,
@@ -254,7 +254,7 @@ export default {
               </div>
             </div>
 
-            <LastScriptCard
+            <LastNoteCard
               :note="lastNote"
               :is-loading="isLoadingLastNote"
               :error="lastNoteError"
