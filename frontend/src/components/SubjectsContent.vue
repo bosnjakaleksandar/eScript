@@ -9,14 +9,17 @@ export default {
       isLoading: false,
       errorMessage: "",
       subjectIcons: {
-        1: "fa-solid fa-calculator",
-        2: "fa-solid fa-flask",
-        3: "fa-solid fa-code",
-        4: "fa-solid fa-book-atlas",
-        5: "fa-solid fa-dna",
-        6: "fa-solid fa-comments-dollar",
-        7: "fa-solid fa-palette",
-        default: "fa-solid fa-bookmark",
+        1: "fa-solid fa-layer-group",
+        2: "fa-solid fa-business-time",
+        3: "fa-solid fa-network-wired",
+        4: "fa-solid fa-language",
+        5: "fa-solid fa-shield-halved",
+        6: "fa-solid fa-databasefa-solid fa-database",
+        7: "fa-solid fa-rectangle-ad",
+        8: "fa-solid fa-chart-column",
+        9: "fa-solid fa-square-root-variable",
+        10: "fa-solid fa-chess-knight",
+        default: "fa-solid fa-book",
       },
     };
   },
@@ -67,7 +70,7 @@ export default {
 
 <template>
   <div class="subjects-list-container">
-    <h2>Available Subjects</h2>
+    <h2 class="border-bottom mb-3 pb-2">Subjects</h2>
 
     <div v-if="isLoading" class="loading-message text-center py-5">
       <div
@@ -130,14 +133,12 @@ export default {
 
 <style scoped>
 .subjects-list-container {
-  max-width: 1300px;
+  max-width: 100%;
   margin: 0 auto;
-  padding: 15px; 
+  padding: 15px;
 }
 
 h2 {
-  text-align: center;
-  margin-bottom: 35px;
   color: #343a40;
   font-weight: 600;
   padding-top: 15px;
@@ -150,16 +151,12 @@ h2 {
 
 .subjects-grid {
   display: grid;
-  grid-template-columns: repeat(
-    auto-fill,
-    minmax(220px, 1fr)
-  );
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 25px;
 }
 
 .subject-card {
   background-color: #fff;
-  border: 1px solid #e0e0e0;
   border-radius: 10px;
   padding: 25px;
   text-align: center;
@@ -169,13 +166,13 @@ h2 {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 190px; 
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  min-height: 190px;
+  box-shadow: 0 0.4rem 1rem rgba(0, 0, 0, 0.08);
 }
 
 .subject-card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 0.75rem 1.5rem rgba(0, 74, 173, 0.15);
 }
 
 .subject-icon-wrapper {
@@ -184,13 +181,13 @@ h2 {
 
 .subject-icon {
   font-size: 3rem;
-  color: #0056b3; 
+  color: #0056b3;
 }
 
 .subject-name {
   font-size: 1.15rem;
   font-weight: 600;
-  color: #333; 
+  color: #333;
   margin-bottom: 8px;
 }
 

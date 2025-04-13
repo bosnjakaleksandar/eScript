@@ -3,6 +3,7 @@ import AuthView from "../views/Auth.vue";
 import DashboardView from "../views/Dashboard.vue";
 import MyNotes from "../views/MyNotes.vue";
 import Subjects from "../views/Subjects.vue";
+import SubjectNotesView from "../views/SubjectNotes.vue";
 import sessionApiService from "../services/api/sessionApiService";
 
 const routes = [
@@ -25,6 +26,11 @@ const routes = [
     path: "/subjects",
     name: "Subjects",
     component: Subjects,
+  },
+  {
+    path: "/subjects/:subjectId/notes",
+    name: "SubjectNotes",
+    component: SubjectNotesView,
   },
 ];
 

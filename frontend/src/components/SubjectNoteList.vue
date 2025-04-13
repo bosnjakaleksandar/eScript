@@ -1,24 +1,15 @@
 <script>
-import ConfirmDialog from "./ConfirmDialog.vue";
-
 export default {
-  name: "NoteList",
-  components: {
-    ConfirmDialog,
-  },
+  name: "SubjectNoteList",
   props: {
     notes: { type: Array, required: true, default: () => [] },
     isLoading: { type: Boolean, default: false },
     error: { type: String, default: "" },
   },
-  emits: ["delete-note"],
   data() {
     return {
       expandedNoteId: null,
-      notePreviewLength: 100,
-      showConfirmDialog: false,
-      noteIdToDelete: null,
-      noteTitleToDelete: "",
+      notePreviewLength: 150,
     };
   },
   computed: {
@@ -44,13 +35,14 @@ export default {
           }
           displayContent = preview + "...";
         }
-        return { ...note, isExpanded, requiresTruncation, displayContent };
+        return {
+          ...note,
+          isExpanded,
+          requiresTruncation,
+          displayContent,
+          author_name: note.author_name,
+        };
       });
-    },
-    confirmDialogMessage() {
-      return `Are you sure you want to delete the note "${
-        this.noteTitleToDelete || "this note"
-      }"?`;
     },
   },
   methods: {
@@ -79,39 +71,17 @@ export default {
         return dateString;
       }
     },
-    requestDeleteConfirmation(noteId, noteTitle) {
-      this.noteIdToDelete = noteId;
-      this.noteTitleToDelete = noteTitle || "this note";
-      this.showConfirmDialog = true;
-    },
-    handleConfirmDelete() {
-      if (this.noteIdToDelete !== null) {
-        this.$emit("delete-note", this.noteIdToDelete);
-      }
-      this.closeConfirmDialog();
-    },
-    handleCancelDelete() {
-      this.closeConfirmDialog();
-    },
-    closeConfirmDialog() {
-      this.showConfirmDialog = false;
-      setTimeout(() => {
-        this.noteIdToDelete = null;
-        this.noteTitleToDelete = "";
-      }, 100);
-    },
   },
 };
 </script>
 <template>
-  <div class="user-notes">
+  <div class="subject-note-list">
     <div v-if="isLoading" class="loading-message text-center py-5">
       <div class="spinner-border text-primary" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
-      <p class="mt-2 text-muted">Loading your notes...</p>
+      <p class="mt-2 text-muted">Loading notes...</p>
     </div>
-
     <div
       v-else-if="error"
       class="alert alert-warning mx-auto mt-3"
@@ -120,17 +90,13 @@ export default {
     >
       <i class="fas fa-exclamation-triangle me-1"></i> {{ error }}
     </div>
-
     <div
       v-else-if="!notes || notes.length === 0"
-      class="text-muted no-notes-message text-center"
+      class="text-muted no-notes-message"
     >
-      <i class="fas fa-sticky-note fa-2x my-3"></i>
-      <p>
-        You haven't created any notes yet.<br />Click "Add Note" to create one.
-      </p>
+      <i class="fas fa-folder-open fa-2x mb-3"></i>
+      <p>No notes found for this subject yet.</p>
     </div>
-
     <div v-else class="list-group">
       <div
         v-for="note in processedNotes"
@@ -145,18 +111,18 @@ export default {
       >
         <div class="d-flex w-100 justify-content-between note-header-line mb-2">
           <h6 class="mb-1 note-title">{{ note.title }}</h6>
-          <div class="note-meta d-flex align-items-center">
-            <small class="text-muted note-date me-2">
+          <div class="note-meta text-end">
+            <span
+              v-if="note.author_name"
+              class="d-block small text-muted"
+              title="Author"
+            >
+              <i class="fa-regular fa-user me-1"></i>{{ note.author_name }}
+            </span>
+            <small class="text-muted note-date d-block mt-1" title="Creation date">
               <i class="fa-regular fa-calendar-alt me-1"></i
-              >{{ formatNoteDate(note.created_at) }}</small
-            >
-            <button
-              class="btn btn-sm btn-outline-danger delete-btn p-1"
-              title="Delete Note"
-              @click.stop="requestDeleteConfirmation(note.id, note.title)"
-            >
-              <i class="fa-solid fa-trash-can"></i>
-            </button>
+              >{{ formatNoteDate(note.created_at) }}
+            </small>
           </div>
         </div>
         <transition name="fade" mode="out-in">
@@ -175,39 +141,36 @@ export default {
         </transition>
       </div>
     </div>
-
-    <ConfirmDialog
-      :show="showConfirmDialog"
-      title="Confirm Deletion"
-      :message="confirmDialogMessage"
-      confirm-button-text="Delete"
-      confirm-button-type="danger"
-      @confirm="handleConfirmDelete"
-      @cancel="handleCancelDelete"
-    />
   </div>
 </template>
 <style scoped>
 .loading-message,
 .no-notes-message {
+  padding: 30px 20px;
+  text-align: center;
+  color: #6c757d;
   margin-top: 2rem;
 }
 .no-notes-message {
   background-color: #f8f9fa;
   border: 1px dashed #ced4da;
+  border-radius: 0.375rem;
 }
 .no-notes-message i {
   color: #adb5bd;
 }
-.note-item {
+.list-group-item.note-item {
   cursor: pointer;
   transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-.note-item:hover {
+.list-group-item.note-item:last-child {
+  margin-bottom: 0 !important;
+}
+.list-group-item.note-item:hover {
   background-color: #f8f9fa;
   border-color: #ced4da;
 }
-.note-item.is-expanded {
+.list-group-item.note-item.is-expanded {
   background-color: #f0f2f5;
   border-color: #adb5bd;
 }
@@ -216,11 +179,13 @@ export default {
   color: #212529;
 }
 .note-date {
-  font-size: 0.85em;
-  white-space: nowrap;
-}
+  font-size: 0.8em;
+} 
 .note-meta {
-  gap: 0.5rem;
+  line-height: 1.3;
+}
+.note-meta .fa-regular {
+  margin-right: 4px;
 }
 .note-content {
   white-space: pre-wrap;
@@ -235,18 +200,6 @@ export default {
   font-size: 0.85em;
   margin-left: 5px;
   font-style: italic;
-}
-.delete-btn {
-  line-height: 1;
-  opacity: 0.6;
-  transition: opacity 0.2s ease-in-out;
-  font-size: 0.8em;
-}
-.note-item:hover .delete-btn {
-  opacity: 1;
-}
-.delete-btn:hover {
-  opacity: 1;
 }
 .fade-enter-active,
 .fade-leave-active {

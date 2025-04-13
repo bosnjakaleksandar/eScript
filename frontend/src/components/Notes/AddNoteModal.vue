@@ -232,7 +232,7 @@ export default {
                 Please select a year.
               </div>
             </div>
-            <div class="modal-actions text-end">
+            <div class="modal-actions text-end pt-2">
               <button
                 type="button"
                 class="btn btn-secondary me-2"
