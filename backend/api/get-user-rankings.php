@@ -1,72 +1,69 @@
 <?php
 session_start();
-
 include 'header.php';
 include 'db.php';
 include 'session-check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
+    echo json_encode(['success' => false, 'error' => 'Invalid request method. Only GET is allowed.']);
     exit;
 }
 
-if (!isset($_GET['subject_id']) || !is_numeric($_GET['subject_id'])) {
-    http_response_code(400);
-    exit;
-}
-$subjectId = (int)$_GET['subject_id'];
-
-$notes = [];
-$notesTable = 'notes';
+$rankings = [];
 $usersTable = 'users';
+$notesTable = 'notes';
 $gradesTable = 'grades';
 $userNameColumn = 'username';
 
 try {
     if (!isset($conn) || $conn->connect_error) {
-        throw new Exception("DB connection failed: " . ($conn->connect_error ?? 'Unknown error'));
+        throw new Exception("Database connection failed: " . ($conn->connect_error ?? 'Unknown error'));
     }
 
     $sql = "SELECT
-                n.id, n.title, n.content, n.subject_id, n.user_id, n.created_at,
+                u.id AS user_id,
                 u.{$userNameColumn} AS author_name,
-                AVG(g.grade) AS average_grade,
-                COUNT(g.id) AS rating_count
+                COUNT(DISTINCT n.id) AS note_count,
+                COALESCE(AVG(g.grade), 0) AS overall_average_grade,
+                COUNT(DISTINCT g.id) AS total_ratings_received
             FROM
-                {$notesTable} n
+                {$usersTable} u
             LEFT JOIN
-                {$usersTable} u ON n.user_id = u.id
+                {$notesTable} n ON u.id = n.user_id
             LEFT JOIN
                 {$gradesTable} g ON n.id = g.note_id
-            WHERE
-                n.subject_id = ?
             GROUP BY
-                n.id, n.title, n.content, n.subject_id, n.user_id, n.created_at, u.{$userNameColumn}
+                u.id, u.{$userNameColumn}
             ORDER BY
-                n.created_at DESC";
+                note_count DESC,
+                overall_average_grade DESC
+            LIMIT 10";
+
     $stmt = $conn->prepare($sql);
     if ($stmt === false) {
         throw new Exception("Failed to prepare statement: " . $conn->error);
     }
 
-    $stmt->bind_param("i", $subjectId);
-
     if (!$stmt->execute()) {
         throw new Exception("Failed to execute statement: " . $stmt->error);
     }
+
     $result = $stmt->get_result();
     if ($result === false) {
         throw new Exception("Failed to get result: " . $stmt->error);
     }
-    $notes = $result->fetch_all(MYSQLI_ASSOC);
+
+    $rankings = $result->fetch_all(MYSQLI_ASSOC);
+
     $stmt->close();
     $conn->close();
 
     http_response_code(200);
-    echo json_encode(['success' => true, 'notes' => $notes]);
+    echo json_encode(['success' => true, 'rankings' => $rankings]);
 } catch (Exception $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'An error occurred: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'error' => 'An error occurred while retrieving rankings: ' . $e->getMessage()]);
     if (isset($stmt) && $stmt instanceof mysqli_stmt) {
         $stmt->close();
     }

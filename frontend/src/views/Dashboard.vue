@@ -22,12 +22,18 @@ import DashboardContent from "../components/dashboard/DashboardContent.vue";
   min-height: 100vh;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1280px) {
   .main-content-wrapper {
     margin-left: calc(70px + 1%);
     width: calc(100% - (70px + 1%));
     padding-left: 2%;
     padding-right: 2%;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-content-wrapper {
+    padding-bottom: 70px;
   }
 }
 

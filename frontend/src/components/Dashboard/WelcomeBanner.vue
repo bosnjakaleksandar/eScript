@@ -75,17 +75,10 @@ export default {
   opacity: 0.9;
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
   .welcome-content {
-    padding: 20px;
-    text-align: center;
-  }
-  .welcome-content img {
-    position: static;
-    display: block;
-    max-height: 100px;
-    opacity: 0.6;
-    margin: 15px auto 0;
+    padding: 10px 20px;
+    justify-content: flex-start;
   }
   .title h1 {
     font-size: 1.6rem;

@@ -1,15 +1,22 @@
 <script>
+import StarRating from "./StarRating.vue";
+import RateNoteService from "../services/api/RateNote";
+
 export default {
   name: "SubjectNoteList",
+  components: { StarRating },
   props: {
     notes: { type: Array, required: true, default: () => [] },
     isLoading: { type: Boolean, default: false },
     error: { type: String, default: "" },
   },
+  emits: ["note-rated"],
   data() {
     return {
       expandedNoteId: null,
       notePreviewLength: 150,
+      loggedInUserId: null,
+      ratingStates: {},
     };
   },
   computed: {
@@ -35,13 +42,7 @@ export default {
           }
           displayContent = preview + "...";
         }
-        return {
-          ...note,
-          isExpanded,
-          requiresTruncation,
-          displayContent,
-          author_name: note.author_name,
-        };
+        return { ...note, isExpanded, requiresTruncation, displayContent };
       });
     },
   },
@@ -71,6 +72,58 @@ export default {
         return dateString;
       }
     },
+    getLoggedInUserId() {
+      try {
+        const userData = localStorage.getItem("user");
+        this.loggedInUserId = userData ? JSON.parse(userData)?.id : null;
+      } catch (e) {
+        console.error("Error getting user ID:", e);
+        this.loggedInUserId = null;
+      }
+    },
+    async handleRatingSubmit(noteId, authorId, newGrade) {
+      if (authorId === this.loggedInUserId || this.loggedInUserId === null)
+        return;
+      this.ratingStates = {
+        ...this.ratingStates,
+        [noteId]: { isLoading: true, error: "" },
+      };
+      try {
+        const response = await RateNoteService.rateNote(noteId, newGrade);
+        if (response && response.success) {
+          this.$emit("note-rated");
+          this.ratingStates = {
+            ...this.ratingStates,
+            [noteId]: { isLoading: false, error: "" },
+          };
+        } else {
+          const errorMsg = response?.error || "Failed to save rating.";
+          this.ratingStates = {
+            ...this.ratingStates,
+            [noteId]: { isLoading: false, error: errorMsg },
+          };
+          console.error(`Error rating note ${noteId}:`, errorMsg);
+        }
+      } catch (err) {
+        const errorMsg = err.message || "Network error saving rating.";
+        this.ratingStates = {
+          ...this.ratingStates,
+          [noteId]: { isLoading: false, error: errorMsg },
+        };
+        console.error(`Network error rating note ${noteId}:`, err);
+      } finally {
+        if (this.ratingStates[noteId]?.error) {
+          setTimeout(() => {
+            if (this.ratingStates[noteId]) {
+              this.ratingStates[noteId].error = "";
+            }
+          }, 4000);
+        }
+      }
+    },
+  },
+  created() {
+    this.getLoggedInUserId();
   },
 };
 </script>
@@ -92,7 +145,7 @@ export default {
     </div>
     <div
       v-else-if="!notes || notes.length === 0"
-      class="text-muted no-notes-message"
+      class="text-muted no-notes-message text-center py-5"
     >
       <i class="fas fa-folder-open fa-2x mb-3"></i>
       <p>No notes found for this subject yet.</p>
@@ -103,14 +156,19 @@ export default {
         :key="note.id"
         class="list-group-item list-group-item-action flex-column align-items-start note-item mb-2 rounded border shadow-sm p-3"
         :class="{ 'is-expanded': note.isExpanded }"
-        @click="toggleNoteExpansion(note.id)"
         role="button"
         tabindex="0"
         @keydown.enter="toggleNoteExpansion(note.id)"
         @keydown.space.prevent="toggleNoteExpansion(note.id)"
       >
         <div class="d-flex w-100 justify-content-between note-header-line mb-2">
-          <h6 class="mb-1 note-title">{{ note.title }}</h6>
+          <h6
+            class="mb-1 note-title"
+            @click="toggleNoteExpansion(note.id)"
+            style="cursor: pointer"
+          >
+            {{ note.title }}
+          </h6>
           <div class="note-meta text-end">
             <span
               v-if="note.author_name"
@@ -119,7 +177,7 @@ export default {
             >
               <i class="fa-regular fa-user me-1"></i>{{ note.author_name }}
             </span>
-            <small class="text-muted note-date d-block mt-1" title="Creation date">
+            <small class="text-muted note-date d-block" title="Creation date">
               <i class="fa-regular fa-calendar-alt me-1"></i
               >{{ formatNoteDate(note.created_at) }}
             </small>
@@ -128,6 +186,8 @@ export default {
         <transition name="fade" mode="out-in">
           <p
             class="mb-1 note-content"
+            @click="toggleNoteExpansion(note.id)"
+            style="cursor: pointer"
             :key="note.id + (note.isExpanded ? '-expanded' : '-collapsed')"
           >
             {{ note.displayContent }}
@@ -139,6 +199,56 @@ export default {
             </span>
           </p>
         </transition>
+        <div
+          class="note-actions mt-2 pt-2 border-top d-flex align-items-center justify-content-between flex-wrap gap-2"
+        >
+          <div>
+            <StarRating
+              :modelValue="parseFloat(note.average_grade || 0)"
+              :disabled="note.user_id === loggedInUserId"
+              @rating-selected="
+                handleRatingSubmit(note.id, note.user_id, $event)
+              "
+            />
+            <span
+              v-if="note.user_id === loggedInUserId"
+              class="ms-2 small text-muted"
+              >(Cannot rate own note)</span
+            >
+          </div>
+          <div class="rating-feedback text-end">
+            <span
+              v-if="ratingStates[note.id]?.isLoading"
+              class="ms-2 small text-muted fst-italic"
+              >Saving...</span
+            >
+            <span
+              v-if="ratingStates[note.id]?.error"
+              class="ms-2 small text-danger"
+              >{{ ratingStates[note.id]?.error }}</span
+            >
+            <span
+              v-if="
+                note.rating_count > 0 &&
+                !ratingStates[note.id]?.isLoading &&
+                !ratingStates[note.id]?.error
+              "
+              class="ms-2 small text-muted"
+            >
+              ({{ note.rating_count }}
+              {{ note.rating_count === 1 ? "rating" : "ratings" }})
+            </span>
+            <span
+              v-else-if="
+                !ratingStates[note.id]?.isLoading &&
+                !ratingStates[note.id]?.error
+              "
+              class="ms-2 small text-muted"
+            >
+              (No ratings yet)
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -146,41 +256,37 @@ export default {
 <style scoped>
 .loading-message,
 .no-notes-message {
-  padding: 30px 20px;
-  text-align: center;
-  color: #6c757d;
   margin-top: 2rem;
 }
 .no-notes-message {
   background-color: #f8f9fa;
   border: 1px dashed #ced4da;
   border-radius: 0.375rem;
+  padding: 30px 20px;
 }
 .no-notes-message i {
   color: #adb5bd;
 }
-.list-group-item.note-item {
-  cursor: pointer;
+.note-item {
+  cursor: default;
   transition: background-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
 }
-.list-group-item.note-item:last-child {
-  margin-bottom: 0 !important;
-}
-.list-group-item.note-item:hover {
+.note-item:hover {
   background-color: #f8f9fa;
   border-color: #ced4da;
 }
-.list-group-item.note-item.is-expanded {
+.note-item.is-expanded {
   background-color: #f0f2f5;
   border-color: #adb5bd;
 }
 .note-title {
   font-weight: 600;
   color: #212529;
+  cursor: pointer;
 }
 .note-date {
   font-size: 0.8em;
-} 
+}
 .note-meta {
   line-height: 1.3;
 }
@@ -194,12 +300,19 @@ export default {
   font-size: 0.95rem;
   line-height: 1.6;
   transition: all 0.3s ease-out;
+  cursor: pointer;
 }
 .read-more-indicator {
   color: #0d6efd;
   font-size: 0.85em;
   margin-left: 5px;
   font-style: italic;
+}
+.note-actions {
+  border-top: 1px solid #eee;
+}
+.rating-feedback {
+  flex-shrink: 0;
 }
 .fade-enter-active,
 .fade-leave-active {

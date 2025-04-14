@@ -28,6 +28,7 @@ import MyNotesContent from "../components/Notes/MyNotesContent.vue";
     width: calc(100% - (70px + 1%));
     padding-left: 2%;
     padding-right: 2%;
+    padding-bottom: 70px;
   }
 }
 

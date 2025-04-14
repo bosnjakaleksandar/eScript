@@ -282,35 +282,4 @@ export default {
 .student {
   padding: 10px;
 }
-@media (max-width: 992px) {
-  .dash-row .col-lg-4 {
-    flex: 0 0 50%;
-    max-width: 50%;
-  }
-}
-@media (max-width: 767.98px) {
-  .row.align-items-start > [class*="col-"] {
-    width: 100%;
-    flex: 0 0 100%;
-    max-width: 100%;
-    margin-bottom: 2rem;
-  }
-  .students .row.mb-3 {
-    justify-content: center;
-  }
-  .students .col-4.student {
-    flex: 0 0 30%;
-    max-width: 30%;
-  }
-}
-@media (max-width: 576px) {
-  .dash-row > [class*="col-"] {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-  .col-md-9 > .row.mt-4 > .col-md-6 {
-    flex: 0 0 100%;
-    max-width: 100%;
-  }
-}
 </style>

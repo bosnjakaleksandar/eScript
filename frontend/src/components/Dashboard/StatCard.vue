@@ -18,7 +18,7 @@ export default {
 };
 </script>
 <template>
-  <div class="col-lg-4 col-md-6 mb-4">
+  <div class="col-md-4 mb-4">
     <div
       class="card dash-card border-0 rounded-3 text-center justify-content-center"
     >
@@ -64,7 +64,7 @@ export default {
   box-shadow: 0 0.75rem 1.5rem rgba(0, 74, 173, 0.15);
 }
 
-@media (max-width: 767.98px) {
+@media (max-width: 768px) {
   .dash-card i {
     font-size: 45px;
   }
@@ -73,6 +73,9 @@ export default {
   }
   .dash-card h5 {
     font-size: 0.9rem;
+  }
+  .dash-card {
+    aspect-ratio: unset;
   }
 }
 </style>

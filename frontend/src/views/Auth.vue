@@ -96,7 +96,7 @@ export default {
 
     updateContainerClass() {
       if (window.innerWidth <= 768) {
-        this.containerClass = "container-fluid p-0";
+        this.containerClass = "container-fluid";
       } else {
         this.containerClass = "container";
       }
@@ -312,6 +312,7 @@ export default {
 <style scoped>
 .body-color {
   background-color: rgba(0, 74, 173, 1) !important;
+  height: 100vh;
 }
 .container {
   display: flex;
@@ -368,9 +369,6 @@ a {
   align-items: center;
   justify-content: center;
 }
-.col-content h1 {
-  margin-bottom: 1.5rem;
-}
 .form-control {
   padding: 0.375rem 0.75rem;
 }
@@ -386,9 +384,11 @@ form label {
   transition: transform 0.5s ease-in-out;
 }
 @media (max-width: 768px) {
+  .container-fluid {
+    padding-top: 7%;
+  }
   .registration {
     width: 100%;
-    margin-top: 5%;
   }
   .transition-content,
   .transition-logo {
