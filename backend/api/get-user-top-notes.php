@@ -6,24 +6,25 @@ include 'session-check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Invalid request method.']);
     exit;
 }
-if (!is_logged_in()) {
+
+$profile_user_id = null;
+if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
+    $profile_user_id = (int)$_GET['user_id'];
+} else if (is_logged_in()) {
+    $profile_user_id = get_user_id();
+} else {
     http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'User not authenticated.']);
-    if (isset($conn)) {
-        $conn->close();
-    }
+    echo json_encode(['success' => false, 'error' => 'User ID not specified and user not authenticated.']);
+    if (isset($conn)) $conn->close();
     exit;
 }
-$user_id = get_user_id();
-if ($user_id === null) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Could not retrieve user ID.']);
-    if (isset($conn)) {
-        $conn->close();
-    }
+
+if ($profile_user_id === null) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Could not determine user ID.']);
+    if (isset($conn)) $conn->close();
     exit;
 }
 
@@ -36,22 +37,12 @@ try {
         throw new Exception("DB connection failed: " . ($conn->connect_error ?? 'Unknown error'));
     }
 
-    $sql = "SELECT
-                n.id, n.title, n.content, n.subject_id, n.created_at,
-                AVG(g.grade) AS average_grade,
-                COUNT(g.id) AS rating_count
-            FROM
-                {$notesTable} n
-            LEFT JOIN
-                {$gradesTable} g ON n.id = g.note_id
-            WHERE
-                n.user_id = ?
-            GROUP BY
-                n.id, n.title, n.content, n.subject_id, n.created_at
-            HAVING
-                COUNT(g.id) > 0
-            ORDER BY
-                average_grade DESC, rating_count DESC, n.created_at DESC
+    $sql = "SELECT n.id, n.title, n.content, n.subject_id, n.created_at, AVG(g.grade) AS average_grade, COUNT(g.id) AS rating_count
+            FROM {$notesTable} n
+            LEFT JOIN {$gradesTable} g ON n.id = g.note_id
+            WHERE n.user_id = ?
+            GROUP BY n.id, n.title, n.content, n.subject_id, n.created_at
+            HAVING COUNT(g.id) > 0 ORDER BY average_grade DESC, rating_count DESC, n.created_at DESC
             LIMIT 3";
 
     $stmt = $conn->prepare($sql);
@@ -59,7 +50,7 @@ try {
         throw new Exception("Failed to prepare statement: " . $conn->error);
     }
 
-    $stmt->bind_param("i", $user_id);
+    $stmt->bind_param("i", $profile_user_id);
 
     if (!$stmt->execute()) {
         throw new Exception("Failed to execute statement: " . $stmt->error);
@@ -68,7 +59,6 @@ try {
     if ($result === false) {
         throw new Exception("Failed to get result: " . $stmt->error);
     }
-
     $notes = $result->fetch_all(MYSQLI_ASSOC);
     $stmt->close();
     $conn->close();
@@ -78,11 +68,5 @@ try {
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'An error occurred while retrieving top notes: ' . $e->getMessage()]);
-    if (isset($stmt) && $stmt instanceof mysqli_stmt) {
-        $stmt->close();
-    }
-    if (isset($conn) && $conn instanceof mysqli) {
-        $conn->close();
-    }
     exit;
 }

@@ -46,8 +46,12 @@ export default {
           <tr v-for="(user, index) in rankings" :key="user.user_id">
             <td class="text-center fw-bold rank-cell">#{{ index + 1 }}</td>
             <td>
-              <i class="fa-solid fa-user me-2 text-secondary"></i
-              >{{ user.author_name }}
+              <router-link
+                :to="{ name: 'UserProfile', params: { userId: user.user_id } }"
+              >
+                <i class="fa-solid fa-user me-2"></i>
+                {{ user.author_name }}
+              </router-link>
             </td>
             <td class="text-center">{{ user.note_count }}</td>
             <td class="text-center">
@@ -67,6 +71,10 @@ export default {
   </div>
 </template>
 <style scoped>
+a {
+  text-decoration: none;
+  color: #6c757d;
+}
 .ranking-table th {
   font-weight: 600;
   white-space: nowrap;

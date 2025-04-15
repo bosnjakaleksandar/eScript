@@ -7,6 +7,7 @@ export default {
     return {
       errorMessage: "",
       isLoggingOut: false,
+      loggedInUserId: null,
     };
   },
   methods: {
@@ -17,6 +18,7 @@ export default {
         const response = await LogoutService.logout();
         if (response && response.success) {
           localStorage.removeItem("user");
+          this.loggedInUserId = null;
           if (this.$router) {
             const authRouteName = "Auth";
             const authRouteExists = this.$router.hasRoute(authRouteName);
@@ -47,6 +49,25 @@ export default {
         this.isLoggingOut = false;
       }
     },
+
+    getUserIdFromStorage() {
+      try {
+        const userData = localStorage.getItem("user");
+        if (userData) {
+          const user = JSON.parse(userData);
+          this.loggedInUserId = user?.id || null;
+          console.log("Sidebar - Logged In User ID:", this.loggedInUserId);
+        } else {
+          this.loggedInUserId = null;
+        }
+      } catch (e) {
+        console.error("Sidebar: Error reading user from localStorage", e);
+        this.loggedInUserId = null;
+      }
+    },
+  },
+  mounted() {
+    this.getUserIdFromStorage();
   },
 };
 </script>
@@ -100,8 +121,10 @@ export default {
             ><span class="nav-text">My Notes</span></router-link
           >
         </li>
-        <li>
-          <router-link :to="{ name: 'MyProfile' }">
+        <li v-if="loggedInUserId !== null">
+          <router-link
+            :to="{ name: 'UserProfile', params: { userId: loggedInUserId } }"
+          >
             <i class="fa-solid fa-circle-user"></i>
             <span class="nav-text">My Profile</span>
           </router-link>
@@ -144,7 +167,11 @@ export default {
         <i class="fa-solid fa-file"></i>
         <span class="bottom-nav-text">My Notes</span>
       </router-link>
-      <router-link :to="{ name: 'MyProfile' }" class="bottom-nav-item">
+      <router-link
+        v-if="loggedInUserId !== null"
+        :to="{ name: 'UserProfile', params: { userId: loggedInUserId } }"
+        class="bottom-nav-item"
+      >
         <i class="fa-solid fa-circle-user"></i>
         <span class="bottom-nav-text">My Profile</span>
       </router-link>

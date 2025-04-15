@@ -1,7 +1,10 @@
 import ApiService from "./ApiService";
 
-const getUserProfile = async () => {
-  return ApiService.get("/get-user-profile.php");
+const getUserProfile = async (userId = null) => {
+  const endpoint = userId
+    ? `/get-user-profile.php?user_id=${userId}`
+    : "/get-user-profile.php";
+  return ApiService.get(endpoint);
 };
 
 const uploadProfilePicture = async (formData) => {

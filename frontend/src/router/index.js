@@ -5,7 +5,7 @@ import MyNotes from "../views/MyNotes.vue";
 import Subjects from "../views/Subjects.vue";
 import SubjectNotesView from "../views/SubjectNotes.vue";
 import RankingsView from "../views/Rankings.vue";
-import MyProfileView from '../views/MyProfile.vue'
+import UserProfileView from '../views/UserProfile.vue'
 import sessionApiService from "../services/api/sessionApiService";
 
 const routes = [
@@ -40,9 +40,11 @@ const routes = [
     component: RankingsView,
   },
   {
-    path: '/profile',
-    name: 'MyProfile',
-    component: MyProfileView,
+    path: '/users/:userId/profile',
+    name: 'UserProfile',
+    component: UserProfileView,
+    props: true,
+    meta: { requiresAuth: true }
   },
 ];
 

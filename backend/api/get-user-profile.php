@@ -6,28 +6,26 @@ include 'session-check.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
     http_response_code(405);
-    exit;
-}
-if (!is_logged_in()) {
-    http_response_code(401);
-    if (isset($conn)) {
-        $conn->close();
-    }
+    echo json_encode(['success' => false, 'error' => 'Invalid request method.']);
     exit;
 }
 
 $profile_user_id = null;
 if (isset($_GET['user_id']) && is_numeric($_GET['user_id'])) {
     $profile_user_id = (int)$_GET['user_id'];
-} else {
+} else if (is_logged_in()) {
     $profile_user_id = get_user_id();
+} else {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'error' => 'User ID not specified and user not authenticated.']);
+    if (isset($conn)) $conn->close();
+    exit;
 }
 
 if ($profile_user_id === null) {
-    http_response_code(500);
-    if (isset($conn)) {
-        $conn->close();
-    }
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Could not determine user ID.']);
+    if (isset($conn)) $conn->close();
     exit;
 }
 
@@ -42,7 +40,6 @@ try {
     }
 
     $sqlUser = "SELECT id, username, email, role, profile_image_path FROM {$usersTable} WHERE id = ?";
-
     $stmtUser = $conn->prepare($sqlUser);
     if ($stmtUser === false) throw new Exception("DB User Prepare Error: " . $conn->error);
     $stmtUser->bind_param("i", $profile_user_id);
@@ -67,8 +64,8 @@ try {
     $countData = $resultCount->fetch_assoc();
     $noteCount = $countData ? (int)$countData['note_count'] : 0;
     $stmtCount->close();
-    $conn->close();
 
+    $conn->close();
     $profileData['note_count'] = $noteCount;
 
     http_response_code(200);

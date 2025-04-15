@@ -8,13 +8,19 @@ import AchievementsSection from "../components/profile/AchievementsSection.vue";
 import UploadProfilePictureModal from "../components/profile/UploudProfilePicture.vue";
 
 export default {
-  name: "MyProfileView",
+  name: "UserProfileView",
   components: {
     Sidebar,
     ProfileHeader,
     TopNotesList,
     AchievementsSection,
     UploadProfilePictureModal,
+  },
+  props: {
+    userId: {
+      type: [String, Number],
+      required: true,
+    },
   },
   data() {
     return {
@@ -25,59 +31,97 @@ export default {
       errorProfile: "",
       errorNotes: "",
       showUploadModal: false,
+      loggedInUserId: null,
     };
   },
   methods: {
-    async fetchUserProfile() {
+    async fetchUserProfile(id) {
+      if (!id) {
+        this.errorProfile = "User ID is missing.";
+        return;
+      }
       this.isLoadingProfile = true;
       this.errorProfile = "";
       try {
-        const response = await UserService.getUserProfile();
+        const response = await UserService.getUserProfile(id);
         if (response && response.success) {
           this.userProfile = response.profile;
         } else {
           this.errorProfile = response?.error || "Failed to load profile.";
+          this.userProfile = null;
         }
       } catch (err) {
-        this.errorProfile = `Network error loading profile: ${err.message}`;
+        this.errorProfile = `Network error: ${err.message}`;
         console.error(err);
+        this.userProfile = null;
       } finally {
         this.isLoadingProfile = false;
       }
     },
-    async fetchTopNotes() {
+    async fetchTopNotes(id) {
+      if (!id) return;
       this.isLoadingNotes = true;
       this.errorNotes = "";
       try {
-        const response = await NoteService.getTopRatedUserNotes();
+        const response = await NoteService.getTopRatedUserNotes(id);
         if (response && response.success) {
           this.topNotes = response.notes || [];
         } else {
           this.errorNotes = response?.error || "Failed to load top notes.";
         }
       } catch (err) {
-        this.errorNotes = `Network error loading top notes: ${err.message}`;
+        this.errorNotes = `Network error: ${err.message}`;
         console.error(err);
       } finally {
         this.isLoadingNotes = false;
       }
     },
     openUploadModal() {
-      this.showUploadModal = true;
+      if (this.userProfile && this.loggedInUserId === this.userProfile.id) {
+        this.showUploadModal = true;
+      } else {
+        alert("You can only change your own profile picture.");
+      }
     },
     handlePictureUploaded(newImagePath) {
-      console.log("New image path received:", newImagePath);
       if (this.userProfile && newImagePath) {
         this.userProfile.profile_image_path = newImagePath;
       }
-
       this.showUploadModal = false;
     },
+    getLoggedInUserId() {
+      try {
+        const userData = localStorage.getItem("user");
+        this.loggedInUserId = userData ? JSON.parse(userData)?.id : null;
+      } catch (e) {
+        console.error("Error getting user ID:", e);
+        this.loggedInUserId = null;
+      }
+    },
+    loadProfileData() {
+      if (this.numericUserId) {
+        this.fetchUserProfile(this.numericUserId);
+        this.fetchTopNotes(this.numericUserId);
+      } else {
+        this.errorProfile = "Invalid User ID provided in URL.";
+      }
+    },
   },
-
-  mounted() {
-    this.fetchUserProfile();
-    this.fetchTopNotes();
+  computed: {
+    numericUserId() {
+      return this.userId ? parseInt(this.userId, 10) : null;
+    },
+  },
+  created() {
+    this.getLoggedInUserId();
+    this.loadProfileData();
+  },
+  watch: {
+    numericUserId(newId, oldId) {
+      if (newId && newId !== oldId) {
+        this.loadProfileData();
+      }
+    },
   },
 };
 </script>
@@ -86,7 +130,10 @@ export default {
     <Sidebar />
     <div class="main-content-wrapper">
       <div class="profile-view-container">
-        <div v-if="isLoadingProfile" class="text-center py-5">
+        <div
+          v-if="isLoadingProfile || (!userProfile && !errorProfile)"
+          class="text-center py-5"
+        >
           <div class="spinner-border text-primary" role="status">
             <span class="visually-hidden">Loading...</span>
           </div>
@@ -105,7 +152,6 @@ export default {
             :is-loading="isLoadingNotes"
             :error="errorNotes"
           />
-
           <AchievementsSection :note-count="userProfile.note_count" />
         </template>
         <div v-else class="alert alert-warning">
