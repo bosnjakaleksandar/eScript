@@ -5,6 +5,7 @@ import Sidebar from "../components/Sidebar.vue";
 import ProfileHeader from "../components/profile/ProfileHeader.vue";
 import TopNotesList from "../components/profile/TopNotesList.vue";
 import AchievementsSection from "../components/profile/AchievementsSection.vue";
+import UploadProfilePictureModal from "../components/profile/UploudProfilePicture.vue";
 
 export default {
   name: "MyProfileView",
@@ -13,6 +14,7 @@ export default {
     ProfileHeader,
     TopNotesList,
     AchievementsSection,
+    UploadProfilePictureModal,
   },
   data() {
     return {
@@ -22,6 +24,7 @@ export default {
       isLoadingNotes: false,
       errorProfile: "",
       errorNotes: "",
+      showUploadModal: false,
     };
   },
   methods: {
@@ -59,7 +62,19 @@ export default {
         this.isLoadingNotes = false;
       }
     },
+    openUploadModal() {
+      this.showUploadModal = true;
+    },
+    handlePictureUploaded(newImagePath) {
+      console.log("New image path received:", newImagePath);
+      if (this.userProfile && newImagePath) {
+        this.userProfile.profile_image_path = newImagePath;
+      }
+
+      this.showUploadModal = false;
+    },
   },
+
   mounted() {
     this.fetchUserProfile();
     this.fetchTopNotes();
@@ -81,8 +96,10 @@ export default {
           {{ errorProfile }}
         </div>
         <template v-else-if="userProfile">
-          <ProfileHeader :user="userProfile" />
-
+          <ProfileHeader
+            :user="userProfile"
+            @change-picture-clicked="openUploadModal"
+          />
           <TopNotesList
             :notes="topNotes"
             :is-loading="isLoadingNotes"
@@ -96,6 +113,11 @@ export default {
         </div>
       </div>
     </div>
+    <UploadProfilePictureModal
+      :show="showUploadModal"
+      @close="showUploadModal = false"
+      @picture-uploaded="handlePictureUploaded"
+    />
   </div>
 </template>
 <style scoped>

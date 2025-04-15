@@ -78,6 +78,27 @@ class ApiService {
       throw error;
     }
   }
+
+  async upload(endpoint, formData) {
+    if (!(formData instanceof FormData)) {
+      console.error("Data passed to upload method must be FormData.");
+      throw new Error("Invalid data type for upload.");
+    }
+    try {
+      const response = await fetch(this.baseUrl + endpoint, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+        },
+        body: formData,
+        credentials: "include",
+      });
+      return await this._handleResponse(response);
+    } catch (error) {
+      console.error(`ApiService UPLOAD ${endpoint} Error:`, error);
+      throw error;
+    }
+  }
 }
 
 export default new ApiService();

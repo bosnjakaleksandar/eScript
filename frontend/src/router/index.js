@@ -43,7 +43,6 @@ const routes = [
     path: '/profile',
     name: 'MyProfile',
     component: MyProfileView,
-    // meta: { requiresAuth: true } // Додајте ако већ немате глобални beforeEach guard
   },
 ];
 
