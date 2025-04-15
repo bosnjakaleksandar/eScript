@@ -106,7 +106,7 @@ export default {
 <style scoped>
 .subject-notes-view-container {
   max-width: 100%;
-  margin: 0 autoč
+  margin: 0 auto;
 }
 h2 .text-muted {
   font-weight: 400;

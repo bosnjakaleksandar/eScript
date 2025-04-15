@@ -101,10 +101,10 @@ export default {
           >
         </li>
         <li>
-          <a href="#" @click.prevent
-            ><i class="fa-solid fa-circle-user"></i
-            ><span class="nav-text">My Profile</span></a
-          >
+          <router-link :to="{ name: 'MyProfile' }">
+            <i class="fa-solid fa-circle-user"></i>
+            <span class="nav-text">My Profile</span>
+          </router-link>
         </li>
         <li class="logout">
           <button
@@ -143,6 +143,10 @@ export default {
       <router-link :to="{ name: 'MyNotes' }" class="bottom-nav-item">
         <i class="fa-solid fa-file"></i>
         <span class="bottom-nav-text">My Notes</span>
+      </router-link>
+      <router-link :to="{ name: 'MyProfile' }" class="bottom-nav-item">
+        <i class="fa-solid fa-circle-user"></i>
+        <span class="bottom-nav-text">My Profile</span>
       </router-link>
       <button
         class="bottom-nav-item logout-btn"

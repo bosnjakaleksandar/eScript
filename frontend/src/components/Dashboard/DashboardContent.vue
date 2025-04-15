@@ -279,7 +279,10 @@ export default {
 .students img {
   border: 3px solid rgba(0, 74, 173, 1);
 }
-.student {
-  padding: 10px;
+
+@media (max-width: 1441px) {
+  .student {
+    padding: 5px;
+  }
 }
 </style>

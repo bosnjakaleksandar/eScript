@@ -5,6 +5,7 @@ import MyNotes from "../views/MyNotes.vue";
 import Subjects from "../views/Subjects.vue";
 import SubjectNotesView from "../views/SubjectNotes.vue";
 import RankingsView from "../views/Rankings.vue";
+import MyProfileView from '../views/MyProfile.vue'
 import sessionApiService from "../services/api/sessionApiService";
 
 const routes = [
@@ -37,6 +38,12 @@ const routes = [
     path: "/rankings",
     name: "Rankings",
     component: RankingsView,
+  },
+  {
+    path: '/profile',
+    name: 'MyProfile',
+    component: MyProfileView,
+    // meta: { requiresAuth: true } // Додајте ако већ немате глобални beforeEach guard
   },
 ];
 
