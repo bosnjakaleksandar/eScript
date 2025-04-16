@@ -119,7 +119,7 @@ export default {
       <div class="registration">
         <div class="row">
           <div
-            class="col-md-6 col-content justify-content-center"
+            class="col-md-6 col-content justify-content-center order-2"
             :class="[
               isLoginForm ? 'order-md-1' : 'order-md-2',
               { 'transition-content': isTransitioning },
@@ -397,6 +397,12 @@ form label {
   .col-content {
     height: auto !important;
     max-height: none;
+  }
+  .col-logo {
+    margin-bottom: 20px;
+  }
+  .img-fluid {
+    max-width: 60%;
   }
 }
 </style>

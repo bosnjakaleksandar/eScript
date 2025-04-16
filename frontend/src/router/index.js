@@ -5,7 +5,8 @@ import MyNotes from "../views/MyNotes.vue";
 import Subjects from "../views/Subjects.vue";
 import SubjectNotesView from "../views/SubjectNotes.vue";
 import RankingsView from "../views/Rankings.vue";
-import UserProfileView from '../views/UserProfile.vue'
+import UserProfileView from "../views/UserProfile.vue";
+import UnauthorizedView from "../views/Unauthorized.vue";
 import sessionApiService from "../services/api/sessionApiService";
 
 const routes = [
@@ -13,38 +14,51 @@ const routes = [
     path: "/",
     name: "Auth",
     component: AuthView,
+    meta: { requiresAuth: false },
   },
   {
     path: "/dashboard",
     name: "Dashboard",
     component: DashboardView,
+    meta: { requiresAuth: true },
   },
   {
-    path: "/mynotes",
+    path: "/my-notes",
     name: "MyNotes",
     component: MyNotes,
+    meta: { requiresAuth: true },
   },
   {
     path: "/subjects",
     name: "Subjects",
     component: Subjects,
+    meta: { requiresAuth: true },
   },
   {
-    path: "/subjects/:subjectId/notes",
-    name: "SubjectNotes",
-    component: SubjectNotesView,
+    path: "/profile/:userId",
+    name: "UserProfile",
+    component: UserProfileView,
+    props: true,
+    meta: { requiresAuth: true },
   },
   {
     path: "/rankings",
     name: "Rankings",
     component: RankingsView,
+    meta: { requiresAuth: true },
   },
   {
-    path: '/users/:userId/profile',
-    name: 'UserProfile',
-    component: UserProfileView,
+    path: "/subjects/:subjectId/notes",
+    name: "SubjectNotes",
+    component: SubjectNotesView,
     props: true,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+  },
+  {
+    path: "/unauthorized",
+    name: "Unauthorized",
+    component: UnauthorizedView,
+    meta: { requiresAuth: false },
   },
 ];
 
@@ -54,30 +68,49 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-  if (to.path === "/") {
+  if (to.meta.requiresAuth === false || to.name === "Auth") {
     return next();
   }
 
+  let user = null;
   try {
     const response = await sessionApiService.getLoggedUser();
-    console.log(response);
-
     if (response.success && response.user) {
       localStorage.setItem("user", JSON.stringify(response.user));
+      user = response.user;
+      console.log("Session user fetched/updated:", user);
+    } else {
+      localStorage.removeItem("user");
     }
   } catch (error) {
-    console.error("Failed to fetch logged user:", error);
+    console.error("Failed to fetch session user:", error);
     localStorage.removeItem("user");
   }
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  if (!user) {
+    const userData = localStorage.getItem("user");
+    if (userData) {
+      user = JSON.parse(userData);
+    }
+  }
 
-  if (to.meta.requiresAdmin) {
-    if (user && user.role === "admin") {
-      next();
+  if (to.meta.requiresAuth) {
+    if (user) {
+      if (to.meta.requiresAdmin) {
+        if (user.role === "admin") {
+          next();
+        } else {
+          console.warn(
+            `User ${user.username} tried to access admin route ${to.path}`
+          );
+          next({ name: "Unauthorized" });
+        }
+      } else {
+        next();
+      }
     } else {
-      alert("You do not have access to this page.");
-      next("/");
+      console.log(`Unauthorized access attempt to ${to.path}`);
+      next({ name: "Unauthorized" });
     }
   } else {
     next();

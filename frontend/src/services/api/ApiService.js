@@ -1,9 +1,10 @@
 class ApiService {
   constructor() {
-    this.baseUrl = "http://localhost:8002/api";
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL;
   }
 
   async _handleResponse(response) {
+
     let responseData = null;
     let errorMessage = `HTTP error! Status: ${response.status}`;
 

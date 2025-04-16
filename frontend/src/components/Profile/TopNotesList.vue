@@ -1,6 +1,43 @@
+<script>
+import StarRating from "../StarRating.vue";
+
+export default {
+  name: "TopNotesList",
+  components: { StarRating },
+  props: {
+    notes: { type: Array, default: () => [] },
+    isLoading: { type: Boolean, default: false },
+    error: { type: String, default: "" },
+    profileUsername: {
+      type: String,
+      default: "User",
+    },
+  },
+  methods: {
+    formatNoteDate(dateString) {
+      if (!dateString) return "N/A";
+      try {
+        const date = new Date(dateString);
+        const options = { year: "numeric", month: "short", day: "numeric" };
+        return date.toLocaleDateString("en-GB", options);
+      } catch (e) {
+        return dateString;
+      }
+    },
+    truncateContent(content) {
+      const maxLength = 80;
+      if (typeof content === "string" && content.length > maxLength) {
+        return content.substring(0, maxLength) + "...";
+      }
+      return content || "";
+    },
+  },
+};
+</script>
 <template>
   <div class="top-notes-section mt-4">
-    <h3 class="mb-3">Your Top Rated Notes</h3>
+    <h3 class="mb-3">{{ profileUsername }}'s Top Rated Notes</h3>
+
     <div v-if="isLoading" class="text-center py-3">
       <span class="spinner-border spinner-border-sm"></span> Loading...
     </div>
@@ -9,7 +46,7 @@
       v-else-if="!notes || notes.length === 0"
       class="alert alert-light text-center"
     >
-      You don't have any rated notes yet.
+      This user doesn't have any rated notes yet.
     </div>
     <div v-else class="list-group">
       <router-link
@@ -33,50 +70,15 @@
               :modelValue="parseFloat(note.average_grade || 0)"
               :read-only="true"
             />
-            <span class="d-block small text-muted rating-count"
-              >({{ note.rating_count || 0 }} ratings)</span
-            >
+            <span class="d-block small text-muted rating-count">
+              ({{ note.rating_count || 0 }} ratings)
+            </span>
           </div>
         </div>
       </router-link>
     </div>
   </div>
 </template>
-
-<script>
-import StarRating from "../StarRating.vue"; // Путања до StarRating
-
-export default {
-  name: "TopNotesList",
-  components: { StarRating },
-  props: {
-    notes: { type: Array, default: () => [] },
-    isLoading: { type: Boolean, default: false },
-    error: { type: String, default: "" },
-  },
-  methods: {
-    // Можете користити исту функцију као у NoteListBase или глобални хелпер
-    formatNoteDate(dateString) {
-      if (!dateString) return "N/A";
-      try {
-        const date = new Date(dateString);
-        const options = { year: "numeric", month: "short", day: "numeric" };
-        return date.toLocaleDateString("en-GB", options);
-      } catch (e) {
-        return dateString;
-      }
-    },
-    truncateContent(content) {
-      const maxLength = 80; // Краћи преглед
-      if (typeof content === "string" && content.length > maxLength) {
-        return content.substring(0, maxLength) + "...";
-      }
-      return content || "";
-    },
-  },
-};
-</script>
-
 <style scoped>
 .top-notes-section h3 {
   font-weight: 600;
@@ -96,11 +98,10 @@ export default {
 .rating-count {
   font-size: 0.8em;
 }
-/* Мање звездице за листу */
 .top-note-item :deep(.star-rating) {
   font-size: 0.9rem;
 }
 .top-note-item :deep(.clear-rating-btn) {
   display: none;
-} /* Сакриј clear */
+}
 </style>

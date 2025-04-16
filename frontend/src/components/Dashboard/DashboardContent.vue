@@ -2,6 +2,7 @@
 import DashboardData from "../../services/api/DashboardData";
 import LastNote from "../../services/api/LastNote";
 import PopularSubjectsService from "../../services/api/PopularSubjects";
+import RankingService from "../../services/api/Ranking";
 
 import WelcomeBanner from "./WelcomeBanner.vue";
 import StatCard from "./StatCard.vue";
@@ -35,6 +36,10 @@ export default {
       popularSubjects: [],
       isLoadingPopularSubjects: false,
       popularSubjectsError: "",
+
+      rankings: [],
+      isLoadingRankings: false,
+      rankingsError: "",
     };
   },
   methods: {
@@ -57,6 +62,7 @@ export default {
         this.isLoading = false;
       }
     },
+
     async fetchLastNote() {
       this.isLoadingLastNote = true;
       this.lastNoteError = "";
@@ -75,6 +81,7 @@ export default {
         this.isLoadingLastNote = false;
       }
     },
+
     async fetchPopularSubjects() {
       this.isLoadingPopularSubjects = true;
       this.popularSubjectsError = "";
@@ -94,6 +101,28 @@ export default {
         this.isLoadingPopularSubjects = false;
       }
     },
+
+    async fetchUserRankings() {
+      this.isLoadingRankings = true;
+      this.rankingsError = "";
+      try {
+        const response = await RankingService.getUserRankings();
+        if (response && response.success) {
+          this.rankings = response.rankings || [];
+        } else {
+          this.rankingsError = response?.error || "Failed to load rankings.";
+          console.error("Error fetching rankings:", response);
+        }
+      } catch (err) {
+        this.rankingsError = `Network error: ${
+          err.message || "Could not fetch rankings."
+        }`;
+        console.error("Network error fetching rankings:", err);
+      } finally {
+        this.isLoadingRankings = false;
+      }
+    },
+
     checkUserRole() {
       try {
         const userData = localStorage.getItem("user");
@@ -111,10 +140,27 @@ export default {
         this.userRole = "";
       }
     },
+
     handleSubjectAdded(addedSubject) {
       console.log("Subject added:", addedSubject);
       this.subjectsCount++;
       this.fetchPopularSubjects();
+    },
+
+    getUserImageUrl(imagePath) {
+      const defaultImage = "/img/DefaultAvatar.jpg";
+      const backendBaseUrl = "http://localhost:8002";
+
+      if (imagePath) {
+        if (imagePath.startsWith("http")) {
+          return imagePath;
+        } else if (imagePath.startsWith("/")) {
+          return `${backendBaseUrl}${imagePath}`;
+        } else {
+          return `${backendBaseUrl}/${imagePath}`;
+        }
+      }
+      return defaultImage;
     },
   },
   mounted() {
@@ -123,6 +169,7 @@ export default {
       this.fetchDashboardData(),
       this.fetchLastNote(),
       this.fetchPopularSubjects(),
+      this.fetchUserRankings(),
     ]);
   },
   computed: {
@@ -139,6 +186,9 @@ export default {
     },
     dashboardTitle() {
       return this.userRole === "admin" ? "Admin Dashboard" : "Dashboard";
+    },
+    topRankedUsers() {
+      return this.rankings.slice(0, 3);
     },
   },
 };
@@ -230,27 +280,43 @@ export default {
             </div>
           </div>
           <div class="students">
-            <div class="row mb-3">
-              <div class="col-4 student">
-                <img
-                  src="/img/Aliah Lane.jpg"
-                  class="img-fluid rounded-circle"
-                  alt="Aliah Lane"
-                />
-              </div>
-              <div class="col-4 student">
-                <img
-                  src="/img/Nic Fassbender.jpg"
-                  class="img-fluid rounded-circle"
-                  alt="Nic Fassbender"
-                />
-              </div>
-              <div class="col-4 student">
-                <img
-                  src="/img/Lola Sanders.jpg"
-                  class="img-fluid rounded-circle"
-                  alt="Lola Sanders"
-                />
+            <div
+              v-if="isLoadingRankings"
+              class="text-center text-muted small py-2"
+            >
+              Loading rankings...
+            </div>
+            <div
+              v-else-if="rankingsError"
+              class="text-center text-danger small py-2"
+            >
+              {{ rankingsError }}
+            </div>
+            <div
+              v-else-if="topRankedUsers.length === 0"
+              class="text-center text-muted small py-2"
+            >
+              No ranked students yet.
+            </div>
+            <div v-else class="row mb-3">
+              <div
+                v-for="user in topRankedUsers"
+                :key="user.user_id"
+                class="col-4 student"
+              >
+                <router-link
+                  :to="{
+                    name: 'UserProfile',
+                    params: { userId: user.user_id },
+                  }"
+                  :title="user.author_name"
+                >
+                  <img
+                    :src="getUserImageUrl(user.profile_image_path)"
+                    class="img-fluid rounded-circle"
+                    :alt="user.author_name"
+                  />
+                </router-link>
               </div>
             </div>
 

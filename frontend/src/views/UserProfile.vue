@@ -145,12 +145,14 @@ export default {
         <template v-else-if="userProfile">
           <ProfileHeader
             :user="userProfile"
+            :is-own-profile="loggedInUserId === userProfile?.id"
             @change-picture-clicked="openUploadModal"
           />
           <TopNotesList
             :notes="topNotes"
             :is-loading="isLoadingNotes"
             :error="errorNotes"
+            :profile-username="userProfile.username"
           />
           <AchievementsSection :note-count="userProfile.note_count" />
         </template>
@@ -178,7 +180,9 @@ export default {
 .profile-view-container {
   max-width: 100%;
   margin: 0 auto;
-  padding: 15px;
+  padding-bottom: 15px;
+  padding-left: 15px;
+  padding-right: 15px;
 }
 @media (max-width: 768px) {
   .main-content-wrapper {

@@ -5,6 +5,10 @@ export default {
   name: "ProfileHeader",
   props: {
     user: { type: Object, default: null },
+    isOwnProfile: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["change-picture-clicked"],
   setup(props) {
@@ -44,6 +48,7 @@ export default {
             alt="User profile picture"
           />
           <button
+            v-if="isOwnProfile"
             @click="$emit('change-picture-clicked')"
             class="change-picture-btn btn btn-sm btn-light"
             title="Change Picture"
@@ -53,9 +58,7 @@ export default {
         </div>
         <div class="profile-info flex-grow-1">
           <h1 class="profile-name mb-0">{{ profileName }}</h1>
-          <p v-if="user?.email" class="profile-email mb-0">
-            {{ user.email }}
-          </p>
+          <p v-if="user?.email" class="profile-email mb-0">{{ user.email }}</p>
           <p v-if="user?.role" class="profile-role small mt-1">
             Trenutni nivo: {{ user.role }}
           </p>
